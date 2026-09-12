@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase-server"
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase-server"
 import { notFound, redirect } from "next/navigation"
 import { InvoiceActions } from "@/components/profile/invoice-actions"
 import Link from "next/link"
@@ -14,8 +14,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     redirect("/admin/login")
   }
 
-  // Fetch the order
-  const { data: order, error } = await supabase
+  // Fetch the order using admin client to bypass RLS
+  // (Authorization is enforced manually below — owner or admin only)
+  const supabaseAdmin = await createSupabaseAdminClient()
+  const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(`
       *,
