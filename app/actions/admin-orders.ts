@@ -15,7 +15,6 @@ export async function getAdminOrders() {
     .from("orders")
     .select(`
       *,
-      addresses (*),
       order_items (*)
     `)
     .eq("payment_status", "paid")
@@ -26,7 +25,33 @@ export async function getAdminOrders() {
     return []
   }
 
-  return data
+  if (!data || data.length === 0) return []
+
+  // Fetch addresses separately
+  const addressIds = data.map((o: any) => o.shipping_address_id).filter(Boolean)
+  let addressesMap: Record<string, any> = {}
+  
+  if (addressIds.length > 0) {
+    const { data: addressesData, error: addressError } = await supabaseAdmin
+      .from("addresses")
+      .select("*")
+      .in("id", addressIds)
+      
+    if (!addressError && addressesData) {
+      addressesMap = addressesData.reduce((acc: any, addr: any) => {
+        acc[addr.id] = addr
+        return acc
+      }, {})
+    }
+  }
+
+  // Attach addresses to orders
+  const ordersWithAddresses = data.map((order: any) => ({
+    ...order,
+    addresses: order.shipping_address_id ? [addressesMap[order.shipping_address_id]] : []
+  }))
+
+  return ordersWithAddresses
 }
 
 export async function getAdminOrderById(id: string) {
@@ -42,7 +67,6 @@ export async function getAdminOrderById(id: string) {
     .from("orders")
     .select(`
       *,
-      addresses (*),
       order_items (*)
     `)
     .eq("id", id)
@@ -53,11 +77,24 @@ export async function getAdminOrderById(id: string) {
     return null
   }
 
+  // Fetch address separately
+  let addr = null
+  if (data.shipping_address_id) {
+    const { data: addressData } = await supabaseAdmin
+      .from("addresses")
+      .select("*")
+      .eq("id", data.shipping_address_id)
+      .single()
+    addr = addressData
+  }
+  
+  // Attach address back onto data as it was expected by the UI
+  data.addresses = addr ? [addr] : []
+
   // Extract customer info from address if possible
-  const customerEmail = "Provided at checkout"
-  const addr = Array.isArray(data.addresses) ? data.addresses[0] : data.addresses
-  const customerName = addr?.full_name || "Unknown Customer"
-  const customerPhone = addr?.phone_number || ""
+  const customerEmail = data.user_email || "Provided at checkout"
+  const customerName = addr?.full_name || data.customer_name || "Unknown Customer"
+  const customerPhone = addr?.phone_number || data.customer_phone || ""
 
   return { ...data, user_email: customerEmail, customer_name: customerName, customer_phone: customerPhone }
 }
