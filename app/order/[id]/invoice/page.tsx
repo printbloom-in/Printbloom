@@ -23,18 +23,29 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       *,
       order_items (
         *
-      ),
-      addresses (*)
+      )
     `)
     .eq("id", id)
     .single()
 
   if (error || !order) {
+    console.error("[Invoice] Order fetch error:", JSON.stringify(error), "| id:", id)
     return (
       <div className="p-8 text-center font-mono">
         <h1>Error: Invoice not found.</h1>
       </div>
     )
+  }
+
+  // Fetch address separately to avoid PostgREST relationship errors
+  let addr = null
+  if (order.shipping_address_id) {
+    const { data: addressData } = await supabaseAdmin
+      .from("addresses")
+      .select("*")
+      .eq("id", order.shipping_address_id)
+      .single()
+    addr = addressData
   }
 
   // Authorization check: Must be owner OR admin
@@ -50,9 +61,6 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
   // Format date
   const orderDate = formatDate(order.created_at)
-
-  // Get address object
-  const addr = Array.isArray(order.addresses) ? order.addresses[0] : order.addresses
 
   // Calculate totals
   const subtotal = order.order_items?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) || order.total_amount
