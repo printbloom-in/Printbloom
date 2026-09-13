@@ -85,14 +85,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             {/* Accordions */}
             <div className="mt-10 border-t border-[#E0D9CF] divide-y divide-[#E0D9CF]">
-              <details className="group py-5 cursor-pointer">
+              <details className="group py-5 cursor-pointer" open>
                 <summary className="flex justify-between items-center font-serif text-lg text-[#221F1C] list-none">
                   Product Description
                   <span className="transition group-open:rotate-45">
                     <Plus className="w-5 h-5 text-[#9A8F85]" />
                   </span>
                 </summary>
-                <div className="pt-4 text-sm text-[#6B6259] leading-relaxed">
+                <div className="pt-4 text-sm text-[#6B6259] leading-relaxed whitespace-pre-wrap">
                   {product.description || "Beautifully crafted customized product to keep your memories safe. Made with premium materials and high quality printing."}
                 </div>
               </details>
