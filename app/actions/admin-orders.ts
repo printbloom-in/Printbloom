@@ -105,7 +105,10 @@ export async function updateOrderStatus(id: string, status: string) {
   const { ADMIN_EMAILS } = await import("@/lib/admin-config")
   if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() ?? "")) throw new Error("Unauthorized")
   
-  const { error } = await supabase
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-server")
+  const supabaseAdmin = await createSupabaseAdminClient()
+  
+  const { error } = await supabaseAdmin
     .from("orders")
     .update({ status })
     .eq("id", id)
@@ -126,7 +129,10 @@ export async function updateImagesStatus(id: string, images_status: string) {
   const { ADMIN_EMAILS } = await import("@/lib/admin-config")
   if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() ?? "")) throw new Error("Unauthorized")
   
-  const { error } = await supabase
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-server")
+  const supabaseAdmin = await createSupabaseAdminClient()
+  
+  const { error } = await supabaseAdmin
     .from("orders")
     .update({ images_status })
     .eq("id", id)
