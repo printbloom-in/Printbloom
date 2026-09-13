@@ -95,7 +95,7 @@ export function Navbar() {
           : "bg-[#FBF6EE]/95 backdrop-blur-sm border-b border-[#E0D9CF] shadow-sm"
       )}
     >
-      <div className="container mx-auto max-w-7xl px-4 md:px-8 h-20 flex items-center justify-between">
+      <div className="w-full px-4 md:px-8 lg:px-12 h-20 flex items-center justify-between">
         {/* Logo */}
         <NextLink 
           href="/" 
