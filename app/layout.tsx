@@ -50,6 +50,7 @@ import { CartSync } from "@/components/cart-sync";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function RootLayout({
   children,
@@ -69,6 +70,7 @@ export default function RootLayout({
         <WhatsAppFloat />
         <Toaster position="bottom-right" toastOptions={{ style: { fontFamily: 'var(--font-public-sans)', background: '#221F1C', color: '#FBF6EE', border: 'none' } }} />
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+        <Analytics />
       </body>
     </html>
   );
