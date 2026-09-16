@@ -17,11 +17,14 @@ export async function addUserReminder(formData: FormData) {
     event_date: formData.get("event_date") as string,
   })
   
-  // Also insert into the public CRM `reminders` table so Admins can see it without RLS blocking them
+  // Also insert into the public CRM `reminders` table so Admins can see it
   const customerName = user.user_metadata?.full_name || formData.get("person_name") as string
   const phoneNumber = user.user_metadata?.phone || "Registered User"
   
-  await supabase.from("reminders").insert({
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-server")
+  const supabaseAdmin = await createSupabaseAdminClient()
+  
+  await supabaseAdmin.from("reminders").insert({
     customer_name: customerName,
     phone_number: phoneNumber,
     occasion_name: formData.get("event_type") as string,

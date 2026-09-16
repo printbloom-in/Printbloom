@@ -54,9 +54,9 @@ export async function saveReminder(formData: FormData) {
 }
 
 export async function getUpcomingReminders(daysAhead: number = 20) {
-  const supabase = await createSupabaseServerClient()
+  const supabaseAdmin = await createSupabaseAdminClient()
   
-  const { data, error } = await supabase.from("reminders").select("*")
+  const { data, error } = await supabaseAdmin.from("reminders").select("*")
   
   if (error || !data) {
     return []
@@ -107,7 +107,7 @@ export async function markReminderSent(id: string) {
 }
 
 export async function getAllReminders() {
-  const supabase = await createSupabaseServerClient()
-  const { data } = await supabase.from("reminders").select("*").order("created_at", { ascending: false })
+  const supabaseAdmin = await createSupabaseAdminClient()
+  const { data } = await supabaseAdmin.from("reminders").select("*").order("created_at", { ascending: false })
   return data || []
 }
