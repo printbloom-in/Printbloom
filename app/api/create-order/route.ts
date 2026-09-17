@@ -9,7 +9,7 @@ const razorpay = new Razorpay({
 
 export async function POST(request: Request) {
   try {
-    const { items, addressId, appliedPromo, pointsToRedeem = 0 } = await request.json();
+    const { items, addressId, appliedPromo, pointsToRedeem = 0, marketingOptIn = false } = await request.json();
     
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -163,7 +163,8 @@ export async function POST(request: Request) {
       payment_status: 'pending',
       razorpay_order_id: razorpayOrder.id,
       points_used: validatedPointsToRedeem,
-      images_status: needsPhotos ? 'partial' : 'complete'
+      images_status: needsPhotos ? 'partial' : 'complete',
+      marketing_opt_in: marketingOptIn
     };
     if (addressId) {
       insertData.shipping_address_id = addressId;
@@ -179,6 +180,21 @@ export async function POST(request: Request) {
       .single();
 
     if (orderError) throw new Error("Failed to insert pending order");
+
+    // Async marketing sync if opted in
+    if (marketingOptIn && user.email) {
+      const { syncMarketingContact } = await import("@/lib/email");
+      // Get name from address or profile
+      let customerName = "PrintBloom Customer";
+      if (addressId) {
+        const { data: addr } = await supabase.from('addresses').select('full_name').eq('id', addressId).single();
+        if (addr) customerName = addr.full_name;
+      }
+      const [firstName, ...lastNameArr] = customerName.split(" ");
+      const lastName = lastNameArr.join(" ");
+      // Don't await this, let it run in background so it doesn't block checkout
+      syncMarketingContact(user.email, firstName, lastName);
+    }
 
     // 4. Insert Order Items
     if (items && items.length > 0) {

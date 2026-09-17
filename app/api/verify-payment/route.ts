@@ -121,6 +121,38 @@ export async function POST(request: Request) {
         console.error("Error in points/referral/redemption logic:", err);
       }
 
+      // SEND ORDER CONFIRMED EMAIL
+      try {
+        const { sendTransactionalEmail } = await import("@/lib/email");
+        const { data: userRecord } = await supabaseAdmin.auth.admin.getUserById(existingOrder.user_id);
+        const customerEmail = userRecord?.user?.email;
+        
+        let customerName = "PrintBloom Customer";
+        if (addressId) {
+          const { data: addr } = await supabaseAdmin.from("addresses").select("full_name").eq("id", addressId).single();
+          if (addr) customerName = addr.full_name;
+        }
+
+        if (customerEmail) {
+          const shortOrderId = "PB-" + existingOrder.id.split("-")[0].toUpperCase();
+          const orderDate = new Date(existingOrder.created_at || new Date()).toLocaleDateString('en-IN', {
+            day: 'numeric', month: 'short', year: 'numeric'
+          });
+          
+          sendTransactionalEmail({
+            orderId: existingOrder.id,
+            emailType: "ORDER_CONFIRMED",
+            customerEmail,
+            customerName,
+            orderNumber: shortOrderId,
+            orderDate,
+            orderUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/profile?tab=orders`
+          }); // Not awaiting so it doesn't block response
+        }
+      } catch (err) {
+        console.error("Failed to trigger Order Confirmed email:", err);
+      }
+
       return NextResponse.json({ success: true, message: "Payment verified successfully", orderId: existingOrder.id });
     } else {
       return NextResponse.json({ success: false, message: "Invalid signature" }, { status: 400 });

@@ -32,6 +32,7 @@ export default function CartPage() {
   // Points Redemption State
   const [availablePoints, setAvailablePoints] = useState(0)
   const [pointsToRedeem, setPointsToRedeem] = useState(0)
+  const [marketingOptIn, setMarketingOptIn] = useState(false)
 
   const handlePayment = async () => {
     if (!selectedAddressId) {
@@ -86,7 +87,8 @@ export default function CartPage() {
           })),
           addressId: selectedAddressId,
           appliedPromo: appliedPromo ? appliedPromo.code : null,
-          pointsToRedeem: finalPointsToRedeem
+          pointsToRedeem: finalPointsToRedeem,
+          marketingOptIn
         })
       });
       const orderData = await orderRes.json();
@@ -658,13 +660,27 @@ export default function CartPage() {
               )}
               
               {currentStep === "payment" && (
-                <button 
-                    onClick={handlePayment}
-                    disabled={isProcessing}
+                <>
+                  <div className="mb-4 flex items-start gap-2 bg-[#FBF6EE] p-3 rounded-sm border border-gray-200">
+                    <input 
+                      type="checkbox" 
+                      id="marketingOptIn" 
+                      checked={marketingOptIn} 
+                      onChange={(e) => setMarketingOptIn(e.target.checked)} 
+                      className="mt-0.5 accent-[#221F1C] cursor-pointer" 
+                    />
+                    <label htmlFor="marketingOptIn" className="text-xs text-gray-700 cursor-pointer select-none leading-snug">
+                      I'd like to receive PrintBloom offers and updates.
+                    </label>
+                  </div>
+                  <button 
+                      onClick={handlePayment}
+                      disabled={isProcessing}
                     className="w-full bg-[#221F1C] text-white py-4 rounded-full font-medium hover:bg-black transition-colors disabled:opacity-50"
                   >
                     {isProcessing ? "Processing..." : "Pay Now"}
                   </button>
+                </>
               )}
 
               <div className="mt-6 space-y-3">

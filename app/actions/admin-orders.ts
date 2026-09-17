@@ -108,6 +108,9 @@ export async function updateOrderStatus(id: string, status: string) {
   const { createSupabaseAdminClient } = await import("@/lib/supabase-server")
   const supabaseAdmin = await createSupabaseAdminClient()
   
+  // Get old status to prevent duplicate triggers
+  const { data: oldOrder } = await supabaseAdmin.from("orders").select("status, user_id, shipping_address_id").eq("id", id).single();
+
   const { error } = await supabaseAdmin
     .from("orders")
     .update({ status })
@@ -116,6 +119,41 @@ export async function updateOrderStatus(id: string, status: string) {
   if (error) {
     console.error("Failed to update order status:", error)
     throw new Error(error.message)
+  }
+
+  // Trigger emails if status changed to one of the target statuses
+  if (oldOrder && oldOrder.status !== status) {
+    let emailType = null;
+    if (status === 'processing') emailType = 'ORDER_IN_PRODUCTION';
+    else if (status === 'shipped') emailType = 'ORDER_SHIPPED';
+    else if (status === 'delivered') emailType = 'ORDER_DELIVERED';
+
+    if (emailType) {
+      try {
+        const { sendTransactionalEmail } = await import("@/lib/email");
+        const { data: userRecord } = await supabaseAdmin.auth.admin.getUserById(oldOrder.user_id);
+        const customerEmail = userRecord?.user?.email;
+        
+        let customerName = "PrintBloom Customer";
+        if (oldOrder.shipping_address_id) {
+          const { data: addr } = await supabaseAdmin.from("addresses").select("full_name").eq("id", oldOrder.shipping_address_id).single();
+          if (addr) customerName = addr.full_name;
+        }
+
+        if (customerEmail) {
+          const shortOrderId = "PB-" + id.split("-")[0].toUpperCase();
+          sendTransactionalEmail({
+            orderId: id,
+            emailType: emailType as any,
+            customerEmail,
+            customerName,
+            orderNumber: shortOrderId,
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to trigger ${emailType} email:`, err);
+      }
+    }
   }
 
   revalidatePath("/admin/orders")
