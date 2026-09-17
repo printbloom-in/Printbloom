@@ -128,8 +128,8 @@ export async function POST(request: Request) {
         const customerEmail = userRecord?.user?.email;
         
         let customerName = "PrintBloom Customer";
-        if (addressId) {
-          const { data: addr } = await supabaseAdmin.from("addresses").select("full_name").eq("id", addressId).single();
+        if (existingOrder.shipping_address_id) {
+          const { data: addr } = await supabaseAdmin.from("addresses").select("full_name").eq("id", existingOrder.shipping_address_id).single();
           if (addr) customerName = addr.full_name;
         }
 
