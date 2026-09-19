@@ -52,6 +52,7 @@ import { Toaster } from "sonner";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import NextTopLoader from "nextjs-toploader";
 
 export default function RootLayout({
   children,
@@ -64,6 +65,18 @@ export default function RootLayout({
         className={`${fraunces.variable} ${publicSans.variable} ${ibmPlexMono.variable} antialiased bg-[#FBF6EE] text-[#221F1C] font-sans selection:bg-[#DFBC94] selection:text-white`}
         suppressHydrationWarning
       >
+        <NextTopLoader
+          color="#E2858E"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #E2858E,0 0 5px #E2858E"
+          zIndex={1600}
+        />
         <CartSync />
         {children}
         <GlobalModals />
