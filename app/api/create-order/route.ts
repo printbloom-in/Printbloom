@@ -7,8 +7,23 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
 
+import { getRateLimiter } from "@/lib/rate-limit";
+
 export async function POST(request: Request) {
   try {
+    // 1. IP-based Rate Limiting (Defense against Bot Extortion)
+    const rateLimiter = getRateLimiter();
+    if (rateLimiter) {
+      // Best effort to get the client IP in Next.js / Vercel
+      const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "127.0.0.1";
+      const { success } = await rateLimiter.limit(ip);
+      
+      if (!success) {
+        console.warn(`[SECURITY] Rate limit exceeded for IP: ${ip} on /api/create-order`);
+        return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+      }
+    }
+
     const { items, addressId, appliedPromo, pointsToRedeem = 0, marketingOptIn = false } = await request.json();
     
     const supabase = await createSupabaseServerClient();

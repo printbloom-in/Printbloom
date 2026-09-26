@@ -4,8 +4,21 @@ import { NextResponse } from "next/server"
 // Initialize Gemini SDK. Wait for key to be present.
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
 
+import { getRateLimiter } from "@/lib/rate-limit";
+
 export async function POST(req: Request) {
   try {
+    const rateLimiter = getRateLimiter();
+    if (rateLimiter) {
+      const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "127.0.0.1";
+      const { success } = await rateLimiter.limit(ip);
+      
+      if (!success) {
+        console.warn(`[SECURITY] Rate limit exceeded for IP: ${ip} on /api/generate-caption`);
+        return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+      }
+    }
+
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ error: "Gemini API Key is not configured." }, { status: 500 })
     }

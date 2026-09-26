@@ -1,38 +1,16 @@
-import { headers } from "next/headers"
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-type RateLimitEntry = {
-  count: number;
-  resetTime: number; 
+// Initialize a rate limiter only if the environment variables are present.
+// This prevents the app from crashing locally or in production before the keys are added.
+export const getRateLimiter = () => {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  
+  return new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(5, "1 m"), // Max 5 requests per 1 minute per IP
+    analytics: true,
+  });
 };
-
-// Global map for in-memory IP rate limiting
-const rateLimitMap = new Map<string, RateLimitEntry>();
-
-const LIMIT = 10;
-const WINDOW_MS = 60 * 1000; // 1 minute
-
-export async function getIP(): Promise<string> {
-  const headersList = await headers();
-  const forwardedFor = headersList.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return headersList.get("x-real-ip") || "unknown-ip";
-}
-
-export function checkRateLimit(ip: string, endpoint: string): { success: boolean } {
-  const key = `${endpoint}:${ip}`;
-  const now = Date.now();
-
-  const entry = rateLimitMap.get(key);
-
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(key, { count: 1, resetTime: now + WINDOW_MS });
-    return { success: true };
-  }
-
-  if (entry.count >= LIMIT) {
-    return { success: false };
-  }
-
-  entry.count += 1;
-  return { success: true };
-}
