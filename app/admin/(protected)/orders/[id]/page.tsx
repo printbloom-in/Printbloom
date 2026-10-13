@@ -87,13 +87,14 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
               defaultValue={order.status}
               className="text-sm font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-[#221F1C]"
             >
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
+              <option value="received">Order Received</option>
               <option value="designing">Designing</option>
               <option value="printing">Printing</option>
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
+              <option value="processing">Processing (Legacy)</option>
+              <option value="pending">Pending (Legacy)</option>
             </select>
             <button type="submit" className="bg-[#DFBC94] text-white text-sm font-medium px-5 py-2 rounded-full hover:bg-[#c9a67f] transition-colors">
               Update

@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     const { error: updateError } = await supabaseAdmin
       .from('orders')
       .update({
+        status: 'received',
         payment_status: 'paid',
         razorpay_payment_id: razorpay_payment_id,
       })
@@ -76,6 +77,38 @@ export async function POST(request: Request) {
     }
 
     console.log('Webhook: Order PAID ->', existingOrder.id, razorpay_payment_id);
+
+    // SEND ORDER CONFIRMED EMAIL (Idempotent: skips if already sent by verify-payment)
+    try {
+      const { sendTransactionalEmail } = await import("@/lib/email");
+      const { data: userRecord } = await supabaseAdmin.auth.admin.getUserById(existingOrder.user_id);
+      const customerEmail = userRecord?.user?.email;
+      
+      let customerName = "PrintBloom Customer";
+      if (existingOrder.shipping_address_id) {
+        const { data: addr } = await supabaseAdmin.from("addresses").select("full_name").eq("id", existingOrder.shipping_address_id).single();
+        if (addr) customerName = addr.full_name;
+      }
+
+      if (customerEmail) {
+        const shortOrderId = "PB-" + existingOrder.id.split("-")[0].toUpperCase();
+        const orderDate = new Date(existingOrder.created_at || new Date()).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+        
+        await sendTransactionalEmail({
+          orderId: existingOrder.id,
+          emailType: "ORDER_CONFIRMED",
+          customerEmail,
+          customerName,
+          orderNumber: shortOrderId,
+          orderDate,
+          orderUrl: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.printbloom.in'}/profile?tab=orders`
+        });
+      }
+    } catch (err) {
+      console.error("Webhook: Failed to trigger Order Confirmed email:", err);
+    }
 
     try {
       if (existingOrder.total_amount > 0) {

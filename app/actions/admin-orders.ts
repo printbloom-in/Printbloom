@@ -121,12 +121,13 @@ export async function updateOrderStatus(id: string, status: string) {
     throw new Error(error.message)
   }
 
-  // Trigger emails if status changed to one of the target statuses
+  // Trigger emails only when entering a new target status
   if (oldOrder && oldOrder.status !== status) {
     let emailType = null;
-    if (status === 'processing') emailType = 'ORDER_IN_PRODUCTION';
+    if (status === 'designing' || status === 'processing') emailType = 'ORDER_IN_PRODUCTION';
     else if (status === 'shipped') emailType = 'ORDER_SHIPPED';
     else if (status === 'delivered') emailType = 'ORDER_DELIVERED';
+    // 'printing', 'received', 'cancelled' do not trigger separate admin status emails
 
     if (emailType) {
       try {

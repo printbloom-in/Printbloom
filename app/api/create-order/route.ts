@@ -174,7 +174,7 @@ export async function POST(request: Request) {
     let insertData: any = {
       user_id: user.id,
       total_amount: orderTotal,
-      status: 'processing',
+      status: 'received',
       payment_status: 'pending',
       razorpay_order_id: razorpayOrder.id,
       points_used: validatedPointsToRedeem,

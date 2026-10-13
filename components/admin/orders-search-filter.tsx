@@ -53,13 +53,13 @@ export function OrdersSearchFilter() {
         className="px-4 py-2 border border-[#E0D9CF] rounded-sm text-sm bg-white focus:outline-none focus:border-[#DFBC94] transition-colors cursor-pointer text-[#221F1C]"
       >
         <option value="all">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="processing">Processing</option>
+        <option value="received">Order Received</option>
         <option value="designing">Designing</option>
         <option value="printing">Printing</option>
         <option value="shipped">Shipped</option>
         <option value="delivered">Delivered</option>
         <option value="cancelled">Cancelled</option>
+        <option value="processing">Processing (Legacy)</option>
       </select>
     </div>
   )

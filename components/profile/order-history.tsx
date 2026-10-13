@@ -5,8 +5,12 @@ import { formatDate } from "@/lib/utils"
 
 // A helper component to render the tracking timeline
 function OrderTracking({ status }: { status: string }) {
-  const steps = ["Processing", "Designing", "Printing", "Shipped", "Delivered"]
-  const currentStepIndex = steps.findIndex(s => s.toLowerCase() === status.toLowerCase())
+  const steps = ["Order Received", "Designing", "Printing", "Shipped", "Delivered"]
+  const normalizedStatus = status?.toLowerCase() === 'received' ? 'order received' :
+    status?.toLowerCase() === 'processing' ? 'order received' :
+    status?.toLowerCase() === 'pending' ? 'order received' :
+    status?.toLowerCase()
+  const currentStepIndex = steps.findIndex(s => s.toLowerCase() === normalizedStatus)
   const activeIndex = currentStepIndex === -1 ? 0 : currentStepIndex
 
   return (

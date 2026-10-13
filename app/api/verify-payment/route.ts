@@ -37,10 +37,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: "Payment already verified", orderId: existingOrder.id });
       }
 
-      // 2. Update the order to 'paid' and store the payment ID
+      // 2. Update the order to 'paid', ensure status is 'received', and store payment ID
       const { error: updateError } = await supabaseAdmin
         .from('orders')
         .update({ 
+          status: 'received',
           payment_status: 'paid',
           razorpay_payment_id: razorpay_payment_id
         })
