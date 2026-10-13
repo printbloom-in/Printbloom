@@ -23,26 +23,13 @@ export function AddToCartButton({ product, customizationData = [], minPhotos = 0
   const { openCartDrawer } = useUIStore()
 
   const handleAdd = () => {
-    // Basic validation based on requirements
-    if (minPhotos > 0 && customizationData.length < minPhotos) {
-      toast.error(`Please upload at least ${minPhotos} reference ${minPhotos === 1 ? 'photo' : 'photos'} before adding to cart.`)
-      return
-    }
-
-    // Check if any uploads are still pending
-    const isStillUploading = customizationData.some(photo => photo.isUploading)
-    if (isStillUploading) {
-      toast.error("Please wait for all photos to finish uploading to Cloudinary.")
-      return
-    }
-
-    // Clean up the data to just store URLs and captions for the cart
-    const cleanedCustomization = customizationData.map(photo => ({
+    // Clean up the data to just store URLs and captions for the cart (if any)
+    const cleanedCustomization = (customizationData || []).map(photo => ({
       cloudinaryUrl: photo.cloudinaryUrl,
       caption: photo.caption
     }))
 
-    // Use a unique cart item ID so we can have multiple of the same product with different photos
+    // Use a unique cart item ID
     const cartItemId = `${product.id}-${Date.now()}`
 
     addItem({
@@ -63,9 +50,9 @@ export function AddToCartButton({ product, customizationData = [], minPhotos = 0
   return (
     <button
       onClick={handleAdd}
-      className="w-full bg-transparent border border-[#221F1C] text-[#221F1C] py-4 rounded-full font-medium hover:bg-[#F5F0E8] transition-colors"
+      className="w-full bg-transparent border border-[#221F1C] text-[#221F1C] py-3.5 rounded-full font-medium hover:bg-[#F5F0E8] transition-colors text-center text-sm"
     >
-      Add To Cart
+      Add to Cart
     </button>
   )
 }

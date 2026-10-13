@@ -136,8 +136,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
         
-        {/* Full-width 14-Step Process Section */}
-        <HowItWorksSteps />
+        {/* Full-width Product-Specific Process Section */}
+        <HowItWorksSteps slug={slug} />
         
       </div>
     </main>

@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 
 const navLinks = [
-  { href: "/products", label: "Products" },
+  { href: "/products", label: "Shop" },
   { href: "/how-it-works", label: "How It Works" },
+  { href: "/journal", label: "Journal" },
   { href: "/reactions", label: "Reactions" },
-  { href: "/journal", label: "Stories" },
   { href: "/reviews", label: "Reviews" },
   { href: "/faq", label: "FAQ" },
 ]
@@ -122,7 +122,7 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* Actions */}
+        {/* Actions (Desktop) */}
         <div className="hidden md:flex items-center gap-6">
           <button 
             onClick={openSearchModal}
@@ -130,6 +130,7 @@ export function Navbar() {
               "transition-colors hover:text-[#DFBC94]",
               isTransparent ? "text-white" : "text-[#221F1C]"
             )}
+            aria-label="Search"
           >
             <Search className="w-5 h-5" />
           </button>
@@ -139,6 +140,7 @@ export function Navbar() {
               "transition-colors hover:text-[#DFBC94] flex items-center justify-center",
               isTransparent ? "text-white" : "text-[#221F1C]"
             )}
+            aria-label="Profile"
           >
             {user?.user_metadata?.avatar_url ? (
               <img src={user.user_metadata.avatar_url} alt="Profile" className="w-6 h-6 rounded-full object-cover border border-[#E0D9CF]" />
@@ -152,6 +154,7 @@ export function Navbar() {
               "relative transition-colors hover:text-[#DFBC94]",
               isTransparent ? "text-white" : "text-[#221F1C]"
             )}
+            aria-label="Cart"
           >
             <ShoppingCart className="w-5 h-5" />
             {isMounted && cartItems.length > 0 && (
@@ -162,34 +165,68 @@ export function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Hamburger */}
-        <button
-          className="md:hidden flex flex-col gap-1.5 p-2"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          <span
+        {/* Mobile Header Right: Permanent Profile + Cart + Menu */}
+        <div className="md:hidden flex items-center gap-3">
+          <button 
+            onClick={handleUserClick}
             className={cn(
-              "block w-6 h-0.5 transition-all duration-300",
-              isTransparent ? "bg-white" : "bg-[#221F1C]",
-              menuOpen && "rotate-45 translate-y-2"
+              "p-2 transition-colors hover:text-[#DFBC94] flex items-center justify-center",
+              isTransparent ? "text-white" : "text-[#221F1C]"
             )}
-          />
-          <span
+            aria-label="Profile"
+          >
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="Profile" className="w-5 h-5 rounded-full object-cover border border-[#E0D9CF]" />
+            ) : (
+              <User className="w-5 h-5" />
+            )}
+          </button>
+
+          <button 
+            onClick={openCartDrawer}
             className={cn(
-              "block w-6 h-0.5 transition-all duration-300",
-              isTransparent ? "bg-white" : "bg-[#221F1C]",
-              menuOpen && "opacity-0"
+              "relative p-2 transition-colors hover:text-[#DFBC94]",
+              isTransparent ? "text-white" : "text-[#221F1C]"
             )}
-          />
-          <span
-            className={cn(
-              "block w-6 h-0.5 transition-all duration-300",
-              isTransparent ? "bg-white" : "bg-[#221F1C]",
-              menuOpen && "-rotate-45 -translate-y-2"
+            aria-label="Cart"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {isMounted && cartItems.length > 0 && (
+              <span className="absolute top-0 right-0 bg-[#DFBC94] text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
+                {cartItems.length}
+              </span>
             )}
-          />
-        </button>
+          </button>
+
+          {/* Mobile Hamburger */}
+          <button
+            className="flex flex-col gap-1.5 p-2"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span
+              className={cn(
+                "block w-5 h-0.5 transition-all duration-300",
+                isTransparent ? "bg-white" : "bg-[#221F1C]",
+                menuOpen && "rotate-45 translate-y-2"
+              )}
+            />
+            <span
+              className={cn(
+                "block w-5 h-0.5 transition-all duration-300",
+                isTransparent ? "bg-white" : "bg-[#221F1C]",
+                menuOpen && "opacity-0"
+              )}
+            />
+            <span
+              className={cn(
+                "block w-5 h-0.5 transition-all duration-300",
+                isTransparent ? "bg-white" : "bg-[#221F1C]",
+                menuOpen && "-rotate-45 -translate-y-2"
+              )}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Backdrop */}
@@ -205,37 +242,14 @@ export function Navbar() {
       {menuOpen && (
         <div className="md:hidden fixed left-0 right-0 bg-[#FBF6EE] border-b border-[#E0D9CF] px-5 py-6 flex flex-col z-50 overflow-y-auto shadow-xl" style={{ top: '80px', maxHeight: 'calc(100dvh - 80px)' }}>
           
-          {/* Quick Actions Bar */}
-          <div className="flex items-center justify-between pb-6 mb-2">
+          {/* Quick Search Action */}
+          <div className="pb-4">
             <button 
               onClick={() => { setMenuOpen(false); openSearchModal(); }}
-              className="flex flex-col items-center gap-1.5 text-[#221F1C] hover:text-[#DFBC94] w-20 p-2 bg-white rounded-lg shadow-sm border border-[#E0D9CF]"
+              className="w-full flex items-center gap-3 text-[#221F1C] hover:text-[#DFBC94] px-4 py-3 bg-white rounded-lg shadow-sm border border-[#E0D9CF] text-sm font-medium"
             >
-              <Search className="w-5 h-5" /> 
-              <span className="text-[10px] font-medium uppercase tracking-wider">Search</span>
-            </button>
-            <button 
-              onClick={() => { setMenuOpen(false); handleUserClick(); }}
-              className="flex flex-col items-center gap-1.5 text-[#221F1C] hover:text-[#DFBC94] w-20 p-2 bg-white rounded-lg shadow-sm border border-[#E0D9CF]"
-            >
-              {user?.user_metadata?.avatar_url ? (
-                <img src={user.user_metadata.avatar_url} alt="Profile" className="w-5 h-5 rounded-full object-cover" />
-              ) : (
-                <User className="w-5 h-5" />
-              )}
-              <span className="text-[10px] font-medium uppercase tracking-wider">Profile</span>
-            </button>
-            <button 
-              onClick={() => { setMenuOpen(false); openCartDrawer(); }}
-              className="flex flex-col items-center gap-1.5 text-[#221F1C] hover:text-[#DFBC94] relative w-20 p-2 bg-white rounded-lg shadow-sm border border-[#E0D9CF]"
-            >
-              <ShoppingCart className="w-5 h-5" /> 
-              {isMounted && cartItems.length > 0 && (
-                <span className="absolute top-1 right-3 bg-[#DFBC94] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                  {cartItems.length}
-                </span>
-              )}
-              <span className="text-[10px] font-medium uppercase tracking-wider">Cart</span>
+              <Search className="w-4 h-4 text-[#9A8F85]" /> 
+              <span>Search products, memories...</span>
             </button>
           </div>
 
@@ -254,10 +268,10 @@ export function Navbar() {
             ))}
           </div>
           
-          {/* Action Button - added pb-24 to avoid WhatsApp icon overlap */}
+          {/* Action Button */}
           <div className="mt-8 pb-24">
             <Button asChild className="w-full py-6 text-sm uppercase tracking-widest bg-[#221F1C] hover:bg-black text-white rounded-sm shadow-md">
-              <NextLink href="/products" onClick={() => setMenuOpen(false)}>Order Now</NextLink>
+              <NextLink href="/products" onClick={() => setMenuOpen(false)}>Shop Gifts</NextLink>
             </Button>
           </div>
         </div>

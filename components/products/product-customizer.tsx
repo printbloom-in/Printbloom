@@ -1,17 +1,14 @@
 "use client"
-import { toast } from "sonner";
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useCart } from "@/store/use-cart"
-import { PhotoUploader, UploadedPhoto } from "./photo-uploader"
 import { AddToCartButton } from "./add-to-cart-button"
 import { WishlistButton } from "./wishlist-button"
 import { productVariantsMap, ProductVariant } from "@/lib/pricing"
-import { getPhotoRequirements } from "@/lib/photo-requirements"
-import { Info } from "lucide-react"
+import { getPhotoRequirements, getEstimatedDelivery } from "@/lib/photo-requirements"
+import { Info, Truck, MessageCircle } from "lucide-react"
 
 export function ProductCustomizer({ product, slug, isWishlisted }: { product: any, slug: string, isWishlisted: boolean }) {
-  const [photos, setPhotos] = React.useState<UploadedPhoto[]>([])
   const router = useRouter()
   const { addItem } = useCart()
   
@@ -19,27 +16,17 @@ export function ProductCustomizer({ product, slug, isWishlisted }: { product: an
   const variants = productVariantsMap[slug] || [{ label: "Default", price: product.starting_price || 999 }]
   const [selectedVariant, setSelectedVariant] = React.useState<ProductVariant>(variants[0])
 
-  // Get photo requirements
+  // Get photo requirements and delivery info
   const photoReq = getPhotoRequirements(slug, selectedVariant.label)
+  const estimatedDelivery = getEstimatedDelivery(slug)
+  const isDigital = slug === 'softcopy-magazine' || product?.is_digital
+
+  // Pre-filled WhatsApp message for earlier delivery inquiry
+  const whatsappUrl = `https://wa.me/918691094045?text=${encodeURIComponent(
+    `Hi PrintBloom, I'm interested in ordering the ${product.name}. The estimated delivery is ${estimatedDelivery}, but I need it before that. Could you please confirm if an earlier delivery is possible?`
+  )}`
 
   const handleBuyNow = () => {
-    // Basic validation based on requirements
-    if (photoReq.min > 0 && photos.length < photoReq.min) {
-      toast.error(`Please upload at least ${photoReq.min} reference ${photoReq.min === 1 ? 'photo' : 'photos'} to book your order.`)
-      return
-    }
-
-    const isStillUploading = photos.some(photo => photo.isUploading)
-    if (isStillUploading) {
-      toast.error("Please wait for all photos to finish uploading.")
-      return
-    }
-
-    const cleanedCustomization = photos.map(photo => ({
-      cloudinaryUrl: photo.cloudinaryUrl,
-      caption: photo.caption
-    }))
-
     const cartItemId = `${product.id}-${selectedVariant.label}-${Date.now()}`
 
     addItem({
@@ -51,7 +38,7 @@ export function ProductCustomizer({ product, slug, isWishlisted }: { product: an
       image: product.main_image_url,
       is_digital: product.is_digital,
       variant: selectedVariant.label,
-      customization_data: cleanedCustomization
+      customization_data: []
     })
     
     // Redirect directly to cart for faster checkout
@@ -62,7 +49,7 @@ export function ProductCustomizer({ product, slug, isWishlisted }: { product: an
     <div className="flex flex-col mb-10 w-full">
       {/* Price Display */}
       <div className="mb-6">
-        <span className="text-2xl font-medium text-[#221F1C]">₹{selectedVariant.price}</span>
+        <span className="text-3xl font-medium text-[#221F1C]">₹{selectedVariant.price}</span>
         <p className="text-sm text-[#9A8F85] mt-1">Incl. of all taxes</p>
       </div>
 
@@ -88,26 +75,64 @@ export function ProductCustomizer({ product, slug, isWishlisted }: { product: an
         </div>
       )}
 
-      {/* Partial Upload Notice */}
-      {photoReq.min > 0 && (
-        <div className="mb-6 p-4 bg-[#FBF6EE] border border-[#DFBC94] rounded-sm flex items-start gap-3 text-sm text-[#6B6259]">
+      {/* Recommended Photo Requirement (Display-Only) */}
+      {photoReq.totalText !== "0" && (
+        <div className="mb-5 p-4 bg-[#FBF6EE] border border-[#DFBC94]/60 rounded-sm flex items-start gap-3 text-sm text-[#6B6259]">
           <Info className="w-5 h-5 text-[#DFBC94] shrink-0 mt-0.5" />
           <div>
             <p className="font-medium text-[#221F1C] mb-1">
-              Total photos required: {photoReq.totalText}
+              Photos Required: {photoReq.totalText} photos recommended
             </p>
-            <p>
-              To book your order quickly, you only need to upload <strong>{photoReq.min} reference {photoReq.min === 1 ? 'photo' : 'photos'}</strong> right now. You can send the rest of your photos to our team via WhatsApp after placing the order.
+            {slug.includes("magazine") && (
+              <p className="text-xs text-[#9A8F85] mb-1.5">
+                Each physical page has a front and back side. For example, 8 printable sides = 4 pages.
+              </p>
+            )}
+            <p className="text-xs text-[#6B6259]">
+              No need to upload photos right now. After placing your order, our team will contact you on WhatsApp to collect your photos and personalisation details.
             </p>
           </div>
         </div>
       )}
 
-      {/* Photo Uploader Engine */}
-      <PhotoUploader onPhotosChange={setPhotos} maxText={photoReq.totalText !== "0" ? photoReq.totalText : undefined} />
+      {/* Estimated Delivery Information */}
+      <div className="mb-6 p-4 bg-white border border-[#E0D9CF] rounded-sm space-y-2">
+        <div className="flex items-center gap-2">
+          <Truck className="w-4 h-4 text-[#4B6B4F]" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#9A8F85]">
+            {isDigital ? "Digital Delivery" : "Estimated Delivery"}
+          </span>
+        </div>
+        <p className="text-base font-medium text-[#221F1C]">
+          {isDigital ? `Digital delivery: ${estimatedDelivery}` : estimatedDelivery}
+        </p>
+        <p className="text-xs text-[#9A8F85] leading-relaxed">
+          Delivery timeline begins after we receive the required photos and personalisation details and the design is approved.
+        </p>
+
+        {/* Earlier Delivery Inquiry via WhatsApp */}
+        <div className="pt-2 border-t border-[#E0D9CF]/60 flex items-center justify-between">
+          <span className="text-xs text-[#6B6259]">Need it sooner?</span>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4B6B4F] hover:underline"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Ask about earlier delivery
+          </a>
+        </div>
+      </div>
 
       {/* Actions */}
-      <div className="flex gap-3 w-full mt-4">
+      <div className="flex gap-3 w-full mt-2">
+        <button 
+          onClick={handleBuyNow}
+          className="flex-1 bg-[#221F1C] text-white py-3.5 rounded-full font-medium hover:bg-black transition-colors text-center text-sm"
+        >
+          Buy Now
+        </button>
         <div className="flex-1">
           <AddToCartButton 
             product={{
@@ -116,18 +141,12 @@ export function ProductCustomizer({ product, slug, isWishlisted }: { product: an
               price: selectedVariant.price,
               image: product.main_image_url,
               variant: selectedVariant.label,
-              slug: slug // Pass slug so cart knows what this is
+              slug: slug
             }}
-            customizationData={photos}
-            minPhotos={photoReq.min}
+            customizationData={[]}
+            minPhotos={0}
           />
         </div>
-        <button 
-          onClick={handleBuyNow}
-          className="flex-1 bg-[#221F1C] text-white py-4 rounded-full font-medium hover:bg-black transition-colors"
-        >
-          Buy Now
-        </button>
         <WishlistButton 
           productSlug={slug}
           productName={product.name}

@@ -53,6 +53,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NextTopLoader from "nextjs-toploader";
+import { ScrollToTopOnNavigate } from "@/components/ui/scroll-to-top-on-navigate";
 
 export default function RootLayout({
   children,
@@ -77,6 +78,7 @@ export default function RootLayout({
           shadow="0 0 10px #E2858E,0 0 5px #E2858E"
           zIndex={1600}
         />
+        <ScrollToTopOnNavigate />
         <CartSync />
         {children}
         <GlobalModals />

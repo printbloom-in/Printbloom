@@ -5,33 +5,28 @@ import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 
 const footerLinks = {
-  Products: [
-    { href: "/products", label: "All Products" },
-    { href: "/products/custom-magazine-a4", label: "Custom Magazine A4" },
-    { href: "/products/custom-magazine-a5", label: "Custom Magazine A5" },
-    { href: "/products/polaroids", label: "Vintage Polaroids" },
-    { href: "/products/photo-frames", label: "Classic Photo Frames" },
-    { href: "/products/spotify-cards", label: "Spotify Cards" },
-    { href: "/products/desk-calendar", label: "Desk Calendar" },
+  Shop: [
+    { href: "/products", label: "All Gifts" },
+    { href: "/products/custom-magazine-a5", label: "Magazines" },
+    { href: "/products/polaroids", label: "Polaroids" },
+    { href: "/products/photo-frames", label: "Frames" },
+    { href: "/products/spotify-cards", label: "Small Gifts" },
   ],
-  Company: [
+  Help: [
     { href: "/how-it-works", label: "How It Works" },
-    { href: "/journal", label: "Stories" },
-    { href: "/reviews", label: "Reviews" },
-    { href: "/reactions", label: "Reactions" },
     { href: "/faq", label: "FAQ" },
+    { href: "/policies/shipping", label: "Shipping & Delivery" },
+    { href: "/policies/refund", label: "Returns & Refunds" },
+    { href: "https://wa.me/918691094045", label: "Contact Us" },
   ],
-  Support: [
-    { href: "/policies/shipping", label: "Shipping Policy" },
-    { href: "/policies/refund", label: "Refund Policy" },
-    { href: "/policies/cancellation", label: "Cancellation Policy" },
+  Legal: [
     { href: "/policies/privacy", label: "Privacy Policy" },
     { href: "/policies/terms", label: "Terms & Conditions" },
   ],
-  Contact: [
-    { href: "https://wa.me/918691094045", label: "WhatsApp Us" },
+  Connect: [
+    { href: "https://wa.me/918691094045", label: "Chat on WhatsApp" },
+    { href: "https://instagram.com/printbloom.in", label: "Instagram" },
     { href: "mailto:printbloom.in@gmail.com", label: "printbloom.in@gmail.com" },
-    { href: "https://instagram.com/printbloom.in", label: "@printbloom.in" },
   ],
 }
 
