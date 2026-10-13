@@ -30,11 +30,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PrintBloom",
     description: "Personalized custom magazines and photo gifts.",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://printbloom.vercel.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.printbloom.in",
     siteName: "PrintBloom",
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://printbloom.vercel.app"}/og-image.jpg`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.printbloom.in"}/og-image.jpg`,
         width: 1200,
         height: 630,
       },
