@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+:root {
+  --font-public-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-fraunces: 'Fraunces', ui-serif, Georgia, serif;
+  --font-ibm-plex-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
 @theme inline {
   --color-bg: #FBF6EE;
   --color-surface: #F4ECDD;
@@ -13,9 +19,9 @@
   --color-error: #A5322A;
   --color-warning: #B57C2E;
 
-  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-public-sans), 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), 'Fraunces', ui-serif, Georgia, serif;
+  --font-mono: var(--font-ibm-plex-mono), 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
   --radius-sm: 2px;
   --shadow-modal: 0 8px 24px rgba(0,0,0,0.08);
@@ -34,7 +40,6 @@
   }
   .animate-marquee {
     animation: marquee 35s linear infinite;
-    width: max-content;
   }
   .hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
