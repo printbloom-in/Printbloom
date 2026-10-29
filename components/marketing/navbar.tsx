@@ -4,25 +4,53 @@ import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Search, User, ShoppingCart, ChevronRight } from "lucide-react"
+import { Search, User, ShoppingCart, ChevronRight, ChevronDown } from "lucide-react"
 import { useUIStore } from "@/store/use-ui-store"
 import { useCart } from "@/store/use-cart"
 import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 
-const navLinks = [
+// Primary desktop links: Reactions is OUTSIDE More as a visible primary link
+const primaryNavLinks = [
+  { href: "/products", label: "Shop" },
+  { href: "/how-it-works", label: "How It Works" },
+  { href: "/journal", label: "Journal" },
+  { href: "/reactions", label: "Reactions" },
+  { href: "/reviews", label: "Reviews" },
+]
+
+// More dropdown links: FAQ, About PrintBloom, Shipping & Delivery, Instagram
+const moreDropdownLinks = [
+  { href: "/faq", label: "FAQ" },
+  { href: "/about", label: "About PrintBloom" },
+  { href: "/policies/shipping", label: "Shipping & Delivery" },
+  { href: "https://instagram.com/printbloom.in", label: "Instagram", external: true },
+]
+
+// Mobile drawer primary links
+const mobilePrimaryLinks = [
   { href: "/products", label: "Shop" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/journal", label: "Journal" },
   { href: "/reactions", label: "Reactions" },
   { href: "/reviews", label: "Reviews" },
   { href: "/faq", label: "FAQ" },
+  { href: "/about", label: "About PrintBloom" },
+]
+
+// Mobile drawer secondary links
+const mobileSecondaryLinks = [
+  { href: "/policies/shipping", label: "Shipping & Delivery" },
+  { href: "/policies/refund", label: "Returns & Refunds" },
+  { href: "https://instagram.com/printbloom.in", label: "Instagram", external: true },
 ]
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false)
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const [moreOpen, setMoreOpen] = React.useState(false)
   const pathname = usePathname()
+  const moreRef = React.useRef<HTMLDivElement>(null)
   
   const { openSearchModal, openAuthModal, openCartDrawer } = useUIStore()
   const cartItems = useCart((state) => state.items)
@@ -48,6 +76,33 @@ export function Navbar() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // Close dropdown on outside click or Esc
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
+        setMoreOpen(false)
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMoreOpen(false)
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
+
+  // Close dropdown and mobile menu on route change
+  React.useEffect(() => {
+    setMoreOpen(false)
+    setMenuOpen(false)
+  }, [pathname])
 
   const handleUserClick = () => {
     if (user) {
@@ -86,6 +141,8 @@ export function Navbar() {
     }
   }, [menuOpen])
 
+  const isMoreActive = moreDropdownLinks.some(link => !link.external && pathname === link.href)
+
   return (
     <header
       className={cn(
@@ -105,9 +162,9 @@ export function Navbar() {
           <img src="/logo.png" alt="PrintBloom" className="h-10 md:h-12 w-auto aspect-square object-contain rounded-full shadow-sm transition-transform group-hover:scale-105" />
         </NextLink>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+        {/* Desktop Nav: Shop | How It Works | Journal | Reactions | Reviews | More */}
+        <nav className="hidden md:flex items-center gap-7 lg:gap-8">
+          {primaryNavLinks.map((link) => (
             <NextLink
               key={link.href}
               href={link.href}
@@ -120,6 +177,52 @@ export function Navbar() {
               {link.label}
             </NextLink>
           ))}
+
+          {/* More Dropdown */}
+          <div className="relative" ref={moreRef}>
+            <button
+              onClick={() => setMoreOpen(!moreOpen)}
+              className={cn(
+                "font-sans text-sm tracking-wide transition-colors hover:text-[#DFBC94] flex items-center gap-1",
+                isTransparent ? "text-white/90" : "text-[#221F1C]",
+                (moreOpen || isMoreActive) && "text-[#DFBC94] font-medium"
+              )}
+              aria-haspopup="true"
+              aria-expanded={moreOpen}
+            >
+              <span>More</span>
+              <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", moreOpen && "rotate-180")} />
+            </button>
+
+            {moreOpen && (
+              <div className="absolute right-0 top-full mt-3 w-52 bg-white rounded-md border border-[#E0D9CF] shadow-lg py-2 z-50 animate-in fade-in-50 zoom-in-95 duration-150">
+                {moreDropdownLinks.map((item) => (
+                  item.external ? (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2.5 text-sm text-[#221F1C] hover:bg-[#FBF6EE] hover:text-[#DFBC94] transition-colors"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <NextLink
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "block px-4 py-2.5 text-sm text-[#221F1C] hover:bg-[#FBF6EE] hover:text-[#DFBC94] transition-colors",
+                        pathname === item.href && "text-[#DFBC94] font-medium bg-[#FBF6EE]"
+                      )}
+                    >
+                      {item.label}
+                    </NextLink>
+                  )
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Actions (Desktop) */}
@@ -166,33 +269,35 @@ export function Navbar() {
         </div>
 
         {/* Mobile Header Right: Permanent Profile + Cart + Menu */}
-        <div className="md:hidden flex items-center gap-3">
+        <div className="md:hidden flex items-center gap-1.5 sm:gap-2">
+          {/* Profile control: visually clear, standard tap size */}
           <button 
             onClick={handleUserClick}
             className={cn(
-              "p-2 transition-colors hover:text-[#DFBC94] flex items-center justify-center",
-              isTransparent ? "text-white" : "text-[#221F1C]"
+              "w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-black/5",
+              isTransparent ? "text-white hover:bg-white/10" : "text-[#221F1C]"
             )}
             aria-label="Profile"
           >
             {user?.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url} alt="Profile" className="w-5 h-5 rounded-full object-cover border border-[#E0D9CF]" />
+              <img src={user.user_metadata.avatar_url} alt="Profile" className="w-6 h-6 rounded-full object-cover border border-[#E0D9CF]" />
             ) : (
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5" strokeWidth={2} />
             )}
           </button>
 
+          {/* Cart control */}
           <button 
             onClick={openCartDrawer}
             className={cn(
-              "relative p-2 transition-colors hover:text-[#DFBC94]",
-              isTransparent ? "text-white" : "text-[#221F1C]"
+              "relative w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-black/5",
+              isTransparent ? "text-white hover:bg-white/10" : "text-[#221F1C]"
             )}
             aria-label="Cart"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-5 h-5" strokeWidth={2} />
             {isMounted && cartItems.length > 0 && (
-              <span className="absolute top-0 right-0 bg-[#DFBC94] text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
+              <span className="absolute top-1 right-1 bg-[#DFBC94] text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-medium">
                 {cartItems.length}
               </span>
             )}
@@ -200,7 +305,7 @@ export function Navbar() {
 
           {/* Mobile Hamburger */}
           <button
-            className="flex flex-col gap-1.5 p-2"
+            className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-full transition-colors hover:bg-black/5"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
@@ -253,13 +358,13 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Navigation Links */}
+          {/* Primary Navigation Links */}
           <div className="flex flex-col border-t border-[#E0D9CF]">
-            {navLinks.map((link) => (
+            {mobilePrimaryLinks.map((link) => (
               <NextLink
                 key={link.href}
                 href={link.href}
-                className="flex items-center justify-between py-4 border-b border-[#E0D9CF]/50 text-base text-[#221F1C] hover:text-[#DFBC94] hover:bg-white/50 transition-colors px-2"
+                className="flex items-center justify-between py-3.5 border-b border-[#E0D9CF]/50 text-base text-[#221F1C] hover:text-[#DFBC94] transition-colors px-2"
                 onClick={() => setMenuOpen(false)}
               >
                 <span className="font-medium tracking-wide">{link.label}</span>
@@ -267,12 +372,34 @@ export function Navbar() {
               </NextLink>
             ))}
           </div>
-          
-          {/* Action Button */}
-          <div className="mt-8 pb-24">
-            <Button asChild className="w-full py-6 text-sm uppercase tracking-widest bg-[#221F1C] hover:bg-black text-white rounded-sm shadow-md">
-              <NextLink href="/products" onClick={() => setMenuOpen(false)}>Shop Gifts</NextLink>
-            </Button>
+
+          {/* Secondary Support Links (Neatly grouped below divider, no duplicate Shop Gifts CTA) */}
+          <div className="mt-6 pt-4 border-t border-[#E0D9CF] flex flex-col gap-2.5 pb-8">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-[#9A8F85] px-2 mb-1">Support & Social</span>
+            {mobileSecondaryLinks.map((link) => (
+              link.external ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between py-2 px-2 text-sm text-[#6B6259] hover:text-[#DFBC94] transition-colors"
+                >
+                  <span>{link.label}</span>
+                  <span className="text-xs text-[#9A8F85]">↗</span>
+                </a>
+              ) : (
+                <NextLink
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center justify-between py-2 px-2 text-sm text-[#6B6259] hover:text-[#DFBC94] transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <span>{link.label}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-[#9A8F85]" />
+                </NextLink>
+              )
+            ))}
           </div>
         </div>
       )}

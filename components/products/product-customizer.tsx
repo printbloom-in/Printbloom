@@ -2,6 +2,8 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useCart } from "@/store/use-cart"
+import { useUIStore } from "@/store/use-ui-store"
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 import { AddToCartButton } from "./add-to-cart-button"
 import { WishlistButton } from "./wishlist-button"
 import { productVariantsMap, ProductVariant } from "@/lib/pricing"
@@ -11,6 +13,7 @@ import { Info, Truck, MessageCircle } from "lucide-react"
 export function ProductCustomizer({ product, slug, isWishlisted }: { product: any, slug: string, isWishlisted: boolean }) {
   const router = useRouter()
   const { addItem } = useCart()
+  const { openAuthModal } = useUIStore()
   
   // Variants
   const variants = productVariantsMap[slug] || [{ label: "Default", price: product.starting_price || 999 }]
@@ -26,7 +29,15 @@ export function ProductCustomizer({ product, slug, isWishlisted }: { product: an
     `Hi PrintBloom, I'm interested in ordering the ${product.name}. The estimated delivery is ${estimatedDelivery}, but I need it before that. Could you please confirm if an earlier delivery is possible?`
   )}`
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
+    // Intercept unauthenticated users with AuthModal
+    const supabase = createSupabaseBrowserClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      openAuthModal()
+      return
+    }
+
     const cartItemId = `${product.id}-${selectedVariant.label}-${Date.now()}`
 
     addItem({

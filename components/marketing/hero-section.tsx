@@ -96,7 +96,7 @@ export function HeroSection() {
 
           <FadeInStaggerItem>
             <Button size="lg" asChild className="text-lg hover:scale-105 transition-transform duration-300">
-              <NextLink href="/products">Create My Magazine</NextLink>
+              <NextLink href="/products">Shop Gifts</NextLink>
             </Button>
           </FadeInStaggerItem>
         </FadeInStagger>

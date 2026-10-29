@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import * as React from "react"
 import { Heart } from "lucide-react"
 import { toggleWishlist } from "@/app/actions/wishlist"
+import { useUIStore } from "@/store/use-ui-store"
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 
 interface WishlistButtonProps {
   productSlug: string
@@ -15,13 +17,26 @@ interface WishlistButtonProps {
 export function WishlistButton({ productSlug, productName, productImageUrl, productPrice, initialStatus }: WishlistButtonProps) {
   const [isWishlisted, setIsWishlisted] = React.useState(initialStatus)
   const [isLoading, setIsLoading] = React.useState(false)
+  const { openAuthModal } = useUIStore()
 
   const handleToggle = async () => {
+    // Intercept unauthenticated users with AuthModal
+    const supabase = createSupabaseBrowserClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      openAuthModal()
+      return
+    }
+
     setIsLoading(true)
     try {
       const result = await toggleWishlist(productSlug, productName, productImageUrl, productPrice)
       if (result.error) {
-        toast.error(result.error)
+        if (result.error.toLowerCase().includes("logged in")) {
+          openAuthModal()
+        } else {
+          toast.error(result.error)
+        }
       } else {
         setIsWishlisted(result.isWishlisted!)
       }

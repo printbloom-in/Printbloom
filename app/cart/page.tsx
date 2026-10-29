@@ -261,7 +261,7 @@ export default function CartPage() {
 
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-[#FBF6EE] pt-28 pb-20">
+      <div className="min-h-screen bg-[#FBF6EE] pt-24 md:pt-28 pb-16 md:pb-20">
         <Navbar />
       </div>
     )
@@ -273,15 +273,15 @@ export default function CartPage() {
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
 
-      <div className="container mx-auto max-w-5xl px-4 md:px-8 mt-4">
+      <div className="container mx-auto max-w-5xl px-4 md:px-8 mt-2 md:mt-4">
         
         {/* Header / Brand */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="font-serif text-3xl text-[#221F1C]">The PrintBloom Store</div>
+        <div className="flex flex-col items-center mb-4 md:mb-8">
+          <div className="font-serif text-2xl md:text-3xl text-[#221F1C]">The PrintBloom Store</div>
         </div>
 
         {/* Progress Bar */}
-        <div className="flex items-center justify-center max-w-md mx-auto mb-16 relative">
+        <div className="flex items-center justify-center max-w-md mx-auto mb-8 md:mb-12 relative">
           <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gray-300 -z-10 -translate-y-1/2"></div>
           
           {/* Cart Step */}
@@ -310,14 +310,14 @@ export default function CartPage() {
         </div>
 
         {/* Content Layout */}
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
           
           {/* Left Column (Forms / Items) */}
           <div className="flex-1">
             {currentStep === "cart" && (
               <div>
-                <h2 className="font-serif text-2xl mb-6">Confirm Order</h2>
-                <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-6">
+                <h2 className="font-serif text-xl md:text-2xl mb-4 md:mb-6">Confirm Order</h2>
+                <div className="flex justify-between items-center pb-2 md:pb-3 border-b border-gray-200 mb-4 md:mb-6">
                   <span className="font-medium">Order Items</span>
                   <span className="text-sm font-medium">{items.length} Item{items.length !== 1 && 's'}</span>
                 </div>
@@ -328,7 +328,7 @@ export default function CartPage() {
                     <NextLink href="/products" className="text-[#DFBC94] underline">Continue Shopping</NextLink>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-4 md:space-y-6">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-4">
                         <div className="w-24 h-24 bg-gray-100 rounded-sm relative overflow-hidden border border-gray-200">
@@ -525,10 +525,10 @@ export default function CartPage() {
           </div>
 
           <div className="w-full lg:w-80">
-            <div className="bg-[#F6F6F6] rounded-sm p-6 border border-gray-200 sticky top-32">
-              <h3 className="font-medium mb-6">Bill Details</h3>
+            <div className="bg-[#F6F6F6] rounded-sm p-4 md:p-6 border border-gray-200 sticky top-24 md:top-32">
+              <h3 className="font-medium mb-4 md:mb-6 text-base text-[#221F1C]">Bill Details</h3>
               
-              <div className="space-y-4 text-sm mb-6 border-b border-gray-200 pb-6">
+              <div className="space-y-3 md:space-y-4 text-sm mb-4 md:mb-6 border-b border-gray-200 pb-4 md:pb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Item Total</span>
                   <span>₹{total}</span>
@@ -644,7 +644,7 @@ export default function CartPage() {
                 </div>
               )}
               
-              <div className="flex justify-between font-serif text-xl border-t border-gray-200 pt-6 mb-8 text-[#221F1C]">
+              <div className="flex justify-between font-serif text-lg md:text-xl border-t border-gray-200 pt-4 md:pt-6 mb-5 md:mb-8 text-[#221F1C]">
                 <span>Total Amount</span>
                 <span>₹{Math.max(0, total + deliveryFee - discountAmount - pointsToRedeem).toFixed(2)}</span>
               </div>
@@ -683,7 +683,7 @@ export default function CartPage() {
                 </>
               )}
 
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 md:mt-6 space-y-1.5 md:space-y-2">
                 {[
                   "\"It felt worth every penny\"",
                   "\"Delivered before the deadline — wow!\"",

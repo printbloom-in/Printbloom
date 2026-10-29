@@ -9,8 +9,10 @@ export function WhatsAppFloat() {
     return null
   }
 
+  const isCart = pathname?.startsWith("/cart")
+
   const phoneNumber = "918691094045" // Official PrintBloom number
-  const message = encodeURIComponent("Hi PrintBloom! I need help with my custom memory gift. 🤍")
+  const message = encodeURIComponent("Hi PrintBloom! I need help with my custom memory gift.")
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
 
   return (
@@ -19,7 +21,7 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with PrintBloom on WhatsApp"
-      className="fixed bottom-6 right-6 z-50 group"
+      className={`fixed ${isCart ? "bottom-24 md:bottom-6 right-4 md:right-6 hidden sm:block" : "bottom-6 right-6"} z-40 group`}
     >
       {/* Pulse ring animation */}
       <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-30 scale-100 group-hover:scale-125 transition-transform duration-500 animate-ping" />

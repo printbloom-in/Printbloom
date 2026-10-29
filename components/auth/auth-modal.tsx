@@ -123,7 +123,13 @@ export function AuthModal() {
         // Success!
         closeAuthModal()
         resetForm()
-        window.location.href = "/profile" // Force a hard navigation to profile to ensure server components update
+        if (typeof window !== "undefined") {
+          if (window.location.pathname.startsWith('/profile') || window.location.pathname === '/') {
+            window.location.href = "/profile"
+          } else {
+            window.location.reload()
+          }
+        }
       }
     }
 
@@ -149,7 +155,7 @@ export function AuthModal() {
           
           <img src="/logo.png" alt="PrintBloom" className="h-14 w-14 object-contain rounded-full shadow-sm mb-3" />
           <h2 className="font-serif text-2xl text-[#221F1C] text-center">
-            {mode === "forgot" ? "Reset Password" : mode === "login" ? "Welcome Back 🤍" : "Join PrintBloom 🤍"}
+            {mode === "forgot" ? "Reset Password" : mode === "login" ? "Welcome Back" : "Join PrintBloom"}
           </h2>
         </div>
 

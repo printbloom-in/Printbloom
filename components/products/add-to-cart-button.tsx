@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import * as React from "react"
 import { useCart } from "@/store/use-cart"
 import { useUIStore } from "@/store/use-ui-store"
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 
 type AddToCartProps = {
   product: {
@@ -20,9 +21,17 @@ type AddToCartProps = {
 
 export function AddToCartButton({ product, customizationData = [], minPhotos = 0 }: AddToCartProps) {
   const { addItem } = useCart()
-  const { openCartDrawer } = useUIStore()
+  const { openCartDrawer, openAuthModal } = useUIStore()
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
+    // Intercept unauthenticated users with AuthModal
+    const supabase = createSupabaseBrowserClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) {
+      openAuthModal()
+      return
+    }
+
     // Clean up the data to just store URLs and captions for the cart (if any)
     const cleanedCustomization = (customizationData || []).map(photo => ({
       cloudinaryUrl: photo.cloudinaryUrl,
