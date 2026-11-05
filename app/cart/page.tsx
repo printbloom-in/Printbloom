@@ -404,6 +404,11 @@ export default function CartPage() {
                       e.preventDefault(); 
                       try {
                         const formData = new FormData(e.currentTarget);
+                        const rawPhone = ((formData.get("phone_number") as string) || '').trim();
+                        if (!/^[6-9]\d{9}$/.test(rawPhone) || /^(\d)\1{9}$/.test(rawPhone)) {
+                          toast.error("Please enter a valid 10-digit mobile number");
+                          return;
+                        }
                         
                         // Save address to DB if logged in
                         const { data: { session } } = await supabase.auth.getSession();
@@ -454,7 +459,7 @@ export default function CartPage() {
                       <label className="text-xs text-gray-500 mb-1 block">Mobile Number*</label>
                       <div className="flex">
                         <span className="bg-gray-100 border border-gray-300 border-r-0 rounded-l-sm p-3 text-sm text-gray-600">+91</span>
-                        <input required name="phone_number" type="tel" placeholder="Enter Input" className="flex-1 border border-gray-300 rounded-r-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                        <input required name="phone_number" type="tel" placeholder="9876543210" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" className="flex-1 border border-gray-300 rounded-r-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                       </div>
                     </div>
 

@@ -4,6 +4,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { revalidatePath } from "next/cache"
 import { ADMIN_EMAILS } from "@/lib/admin-config"
 import { checkRateLimit, getIP } from "@/lib/rate-limit"
+import { validatePhoneNumber } from "@/lib/phone-validation"
 
 // Save enquiry to Supabase when user submits order form
 export async function saveEnquiryAction(formData: FormData) {
@@ -19,6 +20,10 @@ export async function saveEnquiryAction(formData: FormData) {
 
   const name = formData.get("name") as string
   const phone = formData.get("phone") as string
+  const phoneValidation = validatePhoneNumber(phone)
+  if (!phoneValidation.isValid) {
+    return { error: phoneValidation.error || "Please enter a valid mobile number." }
+  }
   const product = formData.get("product") as string
   const occasion = formData.get("occasion") as string
   const requiredBy = formData.get("requiredBy") as string
@@ -30,7 +35,7 @@ export async function saveEnquiryAction(formData: FormData) {
     .from("enquiries")
     .insert({
       name,
-      phone,
+      phone: phoneValidation.normalized,
       source,
       user_id: user ? user.id : null,
       occasion,

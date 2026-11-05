@@ -3,8 +3,29 @@
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase-server"
 import { revalidatePath } from "next/cache"
 import { ADMIN_EMAILS } from "@/lib/admin-config"
+import { validatePhoneNumber } from "@/lib/phone-validation"
+import { checkRateLimit, getIP } from "@/lib/rate-limit"
 
 export async function saveFollowUpLead(customer_name: string, phone_number: string, cart_total: number) {
+  // 1. Server-side Rate Limiting (anti-bot / anti-spam)
+  const ip = await getIP()
+  if (!checkRateLimit(ip, "saveFollowUpLead").success) {
+    return { success: false, error: "Too many requests. Please try again later." }
+  }
+
+  // 2. Strict Phone Validation (rejects 0000000000, 1111111111, invalid digits)
+  const phoneValidation = validatePhoneNumber(phone_number)
+  if (!phoneValidation.isValid) {
+    return { success: false, error: phoneValidation.error || "Invalid mobile number." }
+  }
+  const cleanPhone = phoneValidation.normalized
+
+  // 3. Name validation
+  const cleanName = (customer_name || "").trim().slice(0, 100)
+  if (!cleanName || cleanName.length < 2) {
+    return { success: false, error: "Customer name is required." }
+  }
+
   const supabase = await createSupabaseServerClient()
   
   // Check if a pending lead for this phone number already exists in the last 24h
@@ -14,7 +35,7 @@ export async function saveFollowUpLead(customer_name: string, phone_number: stri
   const { data: existing } = await supabase
     .from("follow_ups")
     .select("id")
-    .eq("phone_number", phone_number)
+    .eq("phone_number", cleanPhone)
     .eq("status", "pending")
     .gte("created_at", yesterday.toISOString())
     .single()
@@ -25,10 +46,10 @@ export async function saveFollowUpLead(customer_name: string, phone_number: stri
     return { success: true }
   }
 
-  // Create new lead
+  // Create new lead with clean validated data
   const { error: insertError } = await supabase.from("follow_ups").insert({
-    customer_name,
-    phone_number,
+    customer_name: cleanName,
+    phone_number: cleanPhone,
     cart_total,
     status: "pending"
   })
@@ -51,21 +72,31 @@ export async function getFollowUps() {
     .from("follow_ups")
     .select("*")
     .order("created_at", { ascending: false })
+    .limit(100)
 
   if (error) {
-    console.error("Fetch follow-ups error:", error)
+    console.error("Error fetching follow-ups:", error)
     return []
   }
 
-  return data ?? []
+  return data || []
 }
 
-export async function updateFollowUpStatus(id: string, status: string) {
+export async function updateFollowUpStatus(id: string, status: "pending" | "contacted" | "recovered") {
   const supabaseUser = await createSupabaseServerClient()
   const { data: { user } } = await supabaseUser.auth.getUser()
-  if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() ?? "")) throw new Error("Unauthorized")
+  if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() ?? "")) return { error: "Unauthorized" }
 
   const supabaseAdmin = await createSupabaseAdminClient()
-  await supabaseAdmin.from("follow_ups").update({ status }).eq("id", id)
+  const { error } = await supabaseAdmin
+    .from("follow_ups")
+    .update({ status })
+    .eq("id", id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
   revalidatePath("/admin/follow-ups")
+  return { success: true }
 }

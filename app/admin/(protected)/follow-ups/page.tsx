@@ -3,6 +3,7 @@ import { getFollowUps, updateFollowUpStatus } from "@/app/actions/follow-ups"
 import { WhatsAppButton } from "@/components/admin/whatsapp-button"
 import { formatDateTime } from "@/lib/utils"
 import { FollowUpsSearchFilter } from "@/components/admin/followups-search-filter"
+import { Info } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -39,6 +40,17 @@ export default async function FollowUpsPage({ searchParams }: { searchParams: Pr
           <SectionHeading as="h1" className="text-[#221F1C]">Abandoned Carts & Leads</SectionHeading>
           <p className="text-sm text-[#9A8F85] mt-1">
             Customers who entered their details but didn't finish checkout
+          </p>
+        </div>
+      </div>
+
+      {/* Informative Guidance Banner for Admin */}
+      <div className="mb-6 p-4 bg-[#FBF6EE] border border-[#DFBC94]/80 rounded-sm flex items-start gap-3 text-xs text-[#6B6259]">
+        <Info className="w-4 h-4 text-[#DFBC94] shrink-0 mt-0.5" />
+        <div>
+          <p className="font-semibold text-[#221F1C] mb-0.5">What are Abandoned Cart Leads?</p>
+          <p className="leading-relaxed">
+            These records represent customers who started entering their shipping details in checkout (Step 2) but did not complete payment. They are <strong>NOT</strong> confirmed or paid orders. You can use the WhatsApp button to follow up and assist them with completing their order.
           </p>
         </div>
       </div>

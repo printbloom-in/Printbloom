@@ -1,6 +1,7 @@
 "use server"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { revalidatePath } from "next/cache"
+import { validatePhoneNumber } from "@/lib/phone-validation"
 
 export async function addAddress(formData: FormData) {
   const supabase = await createSupabaseServerClient()
@@ -10,10 +11,16 @@ export async function addAddress(formData: FormData) {
     throw new Error("You must be logged in to add an address")
   }
 
+  const rawPhone = formData.get("phone_number") as string
+  const phoneValidation = validatePhoneNumber(rawPhone)
+  if (!phoneValidation.isValid) {
+    throw new Error(phoneValidation.error || "Please enter a valid 10-digit mobile number")
+  }
+
   const newAddress = {
     user_id: user.id,
     full_name: formData.get("full_name") as string,
-    phone_number: formData.get("phone_number") as string,
+    phone_number: phoneValidation.normalized,
     address_line_1: formData.get("address_line_1") as string,
     address_line_2: (formData.get("address_line_2") as string) || "",
     city: formData.get("city") as string,
@@ -43,7 +50,7 @@ export async function deleteAddress(id: string) {
     .from("addresses")
     .delete()
     .eq("id", id)
-    .eq("user_id", user.id) // security check
+    .eq("user_id", user.id)
 
   if (error) {
     console.error("Error deleting address:", error)
