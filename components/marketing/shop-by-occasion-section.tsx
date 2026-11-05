@@ -43,7 +43,7 @@ export function ShopByOccasionSection() {
           </Link>
         </FadeIn>
 
-        <FadeInStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <FadeInStagger className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {occasions.map((occasion) => (
             <FadeInStaggerItem key={occasion.title}>
               <a 
@@ -59,8 +59,8 @@ export function ShopByOccasionSection() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-90" />
                 
-                <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                  <h3 className="text-white font-serif text-2xl mb-1">{occasion.title}</h3>
+                <div className="absolute inset-0 p-3 sm:p-6 flex flex-col justify-end">
+                  <h3 className="text-white font-serif text-base sm:text-2xl mb-0.5 sm:mb-1">{occasion.title}</h3>
                   <span className="text-white/80 font-mono text-xs uppercase tracking-wider opacity-0 transform translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                     Shop Gifts &rarr;
                   </span>

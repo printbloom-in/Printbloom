@@ -64,7 +64,7 @@ function ReactionVideoCard({ reaction }: { reaction: typeof reactions[0] }) {
 
   return (
     <div
-      className="relative group cursor-pointer overflow-hidden bg-[#2C2926] border border-white/10 rounded-sm aspect-[9/16] md:aspect-[3/4]"
+      className="relative group cursor-pointer overflow-hidden bg-[#2C2926] border border-white/10 rounded-sm aspect-[4/5] sm:aspect-[9/16] md:aspect-[3/4] max-h-[440px] md:max-h-none"
       onClick={handleClick}
     >
         <video

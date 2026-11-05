@@ -14,7 +14,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser"
 const primaryNavLinks = [
   { href: "/products", label: "Shop" },
   { href: "/how-it-works", label: "How It Works" },
-  { href: "/journal", label: "Journal" },
+  { href: "/stories", label: "Stories" },
   { href: "/reactions", label: "Reactions" },
   { href: "/reviews", label: "Reviews" },
 ]
@@ -31,7 +31,7 @@ const moreDropdownLinks = [
 const mobilePrimaryLinks = [
   { href: "/products", label: "Shop" },
   { href: "/how-it-works", label: "How It Works" },
-  { href: "/journal", label: "Journal" },
+  { href: "/stories", label: "Stories" },
   { href: "/reactions", label: "Reactions" },
   { href: "/reviews", label: "Reviews" },
   { href: "/faq", label: "FAQ" },

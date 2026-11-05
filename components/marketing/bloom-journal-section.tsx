@@ -34,7 +34,7 @@ export function BloomJournalSection() {
         
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="font-mono text-xs tracking-[0.2em] uppercase text-text-muted mb-4">
-            The Bloom Journal
+            The Bloom Stories
           </div>
           <SectionHeading as="h2" className="mb-4">Real stories behind the gifts.</SectionHeading>
           <p className="text-text-muted text-lg">
@@ -45,8 +45,8 @@ export function BloomJournalSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stories.map((story) => (
             <div key={story.id} className="group cursor-pointer">
-              <a href="/journal" className="block">
-                <div className="relative aspect-square md:aspect-[3/4] w-full overflow-hidden bg-surface mb-4 border border-border">
+              <a href="/stories" className="block">
+                <div className="relative aspect-[4/3] sm:aspect-square md:aspect-[3/4] max-h-[320px] sm:max-h-none w-full overflow-hidden bg-surface mb-4 border border-border">
                   <Image 
                     src={story.image}
                     alt={story.title}
@@ -68,7 +68,7 @@ export function BloomJournalSection() {
         </div>
 
         <div className="mt-16 text-center">
-          <Link href="/journal" variant="default">
+          <Link href="/stories" variant="default">
             Read More Stories
           </Link>
         </div>
