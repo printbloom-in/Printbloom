@@ -2,7 +2,7 @@ import * as React from "react"
 import { redirect } from "next/navigation"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { Navbar } from "@/components/marketing/navbar"
-import { User, Package, MapPin, Heart, ArrowRight, Wallet, CalendarDays, MessageSquare, LayoutDashboard } from "lucide-react"
+import { User, Package, MapPin, Heart, ArrowRight, Wallet, CalendarDays, MessageSquare, LayoutDashboard, CheckCircle2 } from "lucide-react"
 import { SignOutButton } from "@/components/auth/signout-button"
 import NextLink from "next/link"
 import { OrderHistory } from "@/components/profile/order-history"
@@ -19,7 +19,7 @@ import { Suspense } from "react"
 
 export const dynamic = "force-dynamic"
 
-export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string; verified?: string }> }) {
   const supabase = await createSupabaseServerClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -94,6 +94,15 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       
       <div className="container mx-auto max-w-6xl px-4 md:px-8">
         
+        {resolvedParams.verified === "true" && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-sm flex items-center gap-3 text-sm text-emerald-800 animate-in fade-in slide-in-from-top-2 duration-300">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <p className="font-medium">
+              Your email has been verified successfully! Your PrintBloom account is now active.
+            </p>
+          </div>
+        )}
+
         <h1 className="font-serif text-3xl md:text-4xl text-[#221F1C] mb-6 md:mb-8">My Account</h1>
         
         <div className="flex flex-col md:flex-row gap-6 md:gap-8">

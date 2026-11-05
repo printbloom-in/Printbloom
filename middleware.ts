@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -27,13 +27,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // IMPORTANT: Calling getUser() on each matched route keeps SSR session cookies
+  // fresh across mobile and desktop, preventing unexpected logout/redirect bounces.
+  const { data: { user } } = await supabase.auth.getUser()
+
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
-    const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.redirect(new URL("/admin/login", request.url))
     }
-    const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()) : [];
+    const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()) : []
     if (!adminEmails.includes(user.email?.toLowerCase() ?? "")) {
       return NextResponse.redirect(new URL("/", request.url))
     }
