@@ -64,7 +64,7 @@ function ReactionVideoCard({ reaction }: { reaction: typeof reactions[0] }) {
 
   return (
     <div
-      className="relative group cursor-pointer overflow-hidden bg-[#2C2926] border border-white/10 rounded-sm aspect-[4/5] sm:aspect-[9/16] md:aspect-[3/4] max-h-[440px] md:max-h-none"
+      className="relative group cursor-pointer overflow-hidden bg-[#2C2926] border border-white/10 rounded-2xl w-[250px] sm:w-[270px] md:w-auto shrink-0 snap-center aspect-[9/16] md:aspect-[3/4] lg:aspect-[9/16] max-h-[460px] md:max-h-none shadow-md"
       onClick={handleClick}
     >
         <video
@@ -123,11 +123,14 @@ export function CustomerReactionsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
+        <div className="flex overflow-x-auto gap-4 md:gap-6 pb-4 px-1 snap-x snap-mandatory scrollbar-none md:grid md:grid-cols-3 max-w-4xl mx-auto">
           {reactions.map((reaction) => (
             <ReactionVideoCard key={reaction.id} reaction={reaction} />
           ))}
         </div>
+        <p className="text-center text-xs text-[#9A8F85] mt-3 md:hidden font-mono">
+          &larr; Swipe to view reactions &rarr;
+        </p>
       </div>
     </section>
   )

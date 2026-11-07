@@ -187,8 +187,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 </NextLink>
               </div>
               
-              <div className="px-1 md:px-4">
-                <SignOutButton />
+              <div className="pt-2 md:pt-3 border-t border-[#E0D9CF]/60 mt-1 md:mt-2">
+                <SignOutButton className="flex items-center justify-center md:justify-start gap-2 text-red-600 hover:text-red-700 font-medium transition-colors px-3 py-2.5 md:py-3 md:px-4 rounded-xl bg-white border border-[#E0D9CF] md:border-transparent md:bg-transparent hover:bg-red-50/80 w-full" />
               </div>
             </div>
           </div>

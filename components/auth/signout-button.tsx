@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { useCart } from "@/store/use-cart"
 
-export function SignOutButton() {
+export function SignOutButton({ className }: { className?: string }) {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   
@@ -21,10 +21,10 @@ export function SignOutButton() {
   return (
     <button 
       onClick={handleSignOut} 
-      className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors p-3 rounded-sm hover:bg-red-50 w-full"
+      className={className || "flex items-center gap-2.5 text-red-600 hover:text-red-700 font-medium transition-colors px-3 py-2.5 md:py-3 md:px-4 rounded-xl hover:bg-red-50/80 w-full text-left"}
     >
-      <LogOut className="w-5 h-5" /> 
-      <span>Sign Out</span>
+      <LogOut className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> 
+      <span className="text-xs md:text-base font-medium">Sign Out</span>
     </button>
   )
 }

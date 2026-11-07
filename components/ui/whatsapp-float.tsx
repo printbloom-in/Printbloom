@@ -21,24 +21,28 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with PrintBloom on WhatsApp"
-      className={`fixed ${isCart ? "bottom-24 md:bottom-6 right-4 md:right-6 hidden sm:block" : "bottom-6 right-6"} z-40 group`}
+      className={`fixed ${
+        isCart 
+          ? "bottom-28 sm:bottom-6 right-3 sm:right-6" 
+          : "bottom-20 sm:bottom-6 right-3 sm:right-6"
+      } z-30 group transition-all duration-300`}
     >
       {/* Pulse ring animation */}
       <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-30 scale-100 group-hover:scale-125 transition-transform duration-500 animate-ping" />
       
-      {/* Tooltip */}
-      <span className="absolute bottom-full right-0 mb-2 whitespace-nowrap bg-[#221F1C] text-white text-xs font-medium px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all duration-200 pointer-events-none shadow-lg">
+      {/* Tooltip (Desktop only) */}
+      <span className="hidden sm:inline-block absolute bottom-full right-0 mb-2 whitespace-nowrap bg-[#221F1C] text-white text-xs font-medium px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all duration-200 pointer-events-none shadow-lg">
         Chat with us on WhatsApp
         <span className="absolute top-full right-4 border-4 border-transparent border-t-[#221F1C]" />
       </span>
 
-      {/* Main button */}
-      <span className="relative flex items-center justify-center w-14 h-14 bg-[#25D366] hover:bg-[#20BA5C] rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300">
+      {/* Main button - 44px on mobile (touch-friendly), 56px on desktop */}
+      <span className="relative flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 bg-[#25D366] hover:bg-[#20BA5C] rounded-full shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300">
         {/* Official WhatsApp icon SVG */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 100 100"
-          className="w-10 h-10"
+          className="w-6 h-6 sm:w-8 sm:h-8"
         >
           {/* White WhatsApp speech-circle outline */}
           <path

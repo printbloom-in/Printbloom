@@ -364,7 +364,7 @@ export function Navbar() {
               <NextLink
                 key={link.href}
                 href={link.href}
-                className="flex items-center justify-between py-3.5 border-b border-[#E0D9CF]/50 text-base text-[#221F1C] hover:text-[#DFBC94] transition-colors px-2"
+                className="flex items-center justify-between py-3.5 border-b border-[#E0D9CF]/50 last:border-b-0 text-base text-[#221F1C] hover:text-[#DFBC94] transition-colors px-2"
                 onClick={() => setMenuOpen(false)}
               >
                 <span className="font-medium tracking-wide">{link.label}</span>

@@ -5,7 +5,7 @@ import { TextPressure } from "@/components/ui/text-pressure"
 
 export function FinalCTASection() {
   return (
-    <section className="relative pt-32 pb-16 px-4 md:px-8 bg-[#C19A6B] text-white overflow-hidden flex flex-col items-center">
+    <section className="relative pt-32 pb-16 px-4 md:px-8 bg-[#D99F6C] text-white overflow-hidden flex flex-col items-center">
       <div className="container mx-auto max-w-4xl text-center flex flex-col items-center relative z-10 mb-16">
         <SectionHeading as="h2" className="text-white mb-6 text-4xl md:text-5xl lg:text-6xl">
           Want Something Custom?
