@@ -23,7 +23,27 @@ export default function CartPage() {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
+  const [pendingAddress, setPendingAddress] = useState<{
+    full_name: string;
+    phone_number: string;
+    pincode: string;
+    address_line_1: string;
+    address_line_2?: string;
+    city: string;
+    state: string;
+  } | null>(null)
   const supabase = createSupabaseBrowserClient()
+
+  // Smooth scroll to step top accounting for sticky header
+  const goToStep = (step: Step) => {
+    setCurrentStep(step)
+    if (typeof window !== "undefined") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      })
+    }
+  }
 
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -35,9 +55,9 @@ export default function CartPage() {
   const [marketingOptIn, setMarketingOptIn] = useState(false)
 
   const handlePayment = async () => {
-    if (!selectedAddressId) {
-      toast.error("Please select an address before paying");
-      setCurrentStep("address");
+    if (!selectedAddressId || selectedAddressId === "temp-id") {
+      toast.error("Please select a valid delivery address before paying");
+      goToStep("address");
       return;
     }
 
@@ -153,19 +173,25 @@ export default function CartPage() {
     setIsMounted(true)
     
     // Fetch saved addresses if logged in
-    async function fetchUserData() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
+    async function fetchUserData(currentUser?: any) {
+      let user = currentUser
+      if (!user) {
+        const { data: { session } } = await supabase.auth.getSession()
+        user = session?.user
+      }
+
+      if (user) {
         // Fetch addresses
         const { data: addrData } = await supabase
           .from("addresses")
           .select("*")
-          .eq("user_id", session.user.id)
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           
         if (addrData && addrData.length > 0) {
           setSavedAddresses(addrData)
-          setSelectedAddressId(addrData[0].id)
+          setSelectedAddressId(prev => (prev && prev !== "temp-id" ? prev : addrData[0].id))
+          setShowNewAddressForm(false)
         } else {
           setShowNewAddressForm(true)
         }
@@ -174,7 +200,7 @@ export default function CartPage() {
         const { data: pointsData } = await supabase
           .from("reward_points")
           .select("*")
-          .eq("user_id", session.user.id)
+          .eq("user_id", user.id)
           
         if (pointsData) {
           const balance = pointsData.reduce((acc, curr) => {
@@ -188,8 +214,46 @@ export default function CartPage() {
         setShowNewAddressForm(true)
       }
     }
+
     fetchUserData()
-  }, [])
+
+    // Listen for auth state change (e.g. guest signs in or signs up during checkout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // If the user had entered an address before signing in, persist it now!
+        if (pendingAddress) {
+          try {
+            const { data: newAddr, error } = await supabase.from('addresses').insert({
+              user_id: session.user.id,
+              full_name: pendingAddress.full_name,
+              phone_number: pendingAddress.phone_number,
+              pincode: pendingAddress.pincode,
+              address_line_1: pendingAddress.address_line_1,
+              address_line_2: pendingAddress.address_line_2 || "",
+              city: pendingAddress.city,
+              state: pendingAddress.state,
+              is_default: true
+            }).select().single();
+
+            if (newAddr) {
+              setSavedAddresses(prev => [newAddr, ...prev.filter(a => a.id !== newAddr.id)]);
+              setSelectedAddressId(newAddr.id);
+              setShowNewAddressForm(false);
+              setPendingAddress(null);
+              toast.success("Delivery address saved to your account!");
+              goToStep("payment");
+              return;
+            }
+          } catch (e) {
+            console.error("Auto-saving pending address failed:", e);
+          }
+        }
+        await fetchUserData(session.user);
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [pendingAddress])
   
   const total = getCartTotal()
   
@@ -285,7 +349,10 @@ export default function CartPage() {
           <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gray-300 -z-10 -translate-y-1/2"></div>
           
           {/* Cart Step */}
-          <div className="flex flex-col items-center flex-1 bg-[#FBF6EE]">
+          <div 
+            onClick={() => goToStep("cart")}
+            className="flex flex-col items-center flex-1 bg-[#FBF6EE] cursor-pointer"
+          >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${currentStep === "cart" || currentStep === "address" || currentStep === "payment" ? "bg-[#2AAA5E] text-white" : "bg-white border-2 border-gray-300 text-gray-300"}`}>
               {currentStep !== "cart" ? <CheckCircle2 className="w-5 h-5" /> : "1"}
             </div>
@@ -293,7 +360,12 @@ export default function CartPage() {
           </div>
 
           {/* Address Step */}
-          <div className="flex flex-col items-center flex-1 bg-[#FBF6EE]">
+          <div 
+            onClick={() => {
+              if (items.length > 0) goToStep("address");
+            }}
+            className="flex flex-col items-center flex-1 bg-[#FBF6EE] cursor-pointer"
+          >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${currentStep === "address" || currentStep === "payment" ? "bg-[#2AAA5E] text-white" : "bg-white border-2 border-gray-300 text-gray-300"}`}>
               {currentStep === "payment" ? <CheckCircle2 className="w-5 h-5" /> : "2"}
             </div>
@@ -301,7 +373,12 @@ export default function CartPage() {
           </div>
 
           {/* Payment Step */}
-          <div className="flex flex-col items-center flex-1 bg-[#FBF6EE]">
+          <div 
+            onClick={() => {
+              if (selectedAddressId && selectedAddressId !== "temp-id") goToStep("payment");
+            }}
+            className="flex flex-col items-center flex-1 bg-[#FBF6EE] cursor-pointer"
+          >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${currentStep === "payment" ? "bg-[#2AAA5E] text-white" : "bg-white border-2 border-gray-300 text-gray-300"}`}>
               3
             </div>
@@ -410,38 +487,74 @@ export default function CartPage() {
                           return;
                         }
                         
-                        // Save address to DB if logged in
+                        const fullName = ((formData.get("full_name") as string) || '').trim();
+                        const pincode = ((formData.get("pincode") as string) || '').trim();
+                        const address1 = ((formData.get("address_line_1") as string) || '').trim();
+                        const address2 = ((formData.get("address_line_2") as string) || '').trim();
+                        const city = ((formData.get("city") as string) || '').trim();
+                        const state = ((formData.get("state") as string) || '').trim();
+
+                        if (!fullName || !pincode || !address1 || !city || !state) {
+                          toast.error("Please fill in all required address fields");
+                          return;
+                        }
+
+                        const enteredAddress = {
+                          full_name: fullName,
+                          phone_number: rawPhone,
+                          pincode,
+                          address_line_1: address1,
+                          address_line_2: address2,
+                          city,
+                          state
+                        };
+
+                        // Check login status
                         const { data: { session } } = await supabase.auth.getSession();
                         if (session?.user) {
                           const { data, error } = await supabase.from('addresses').insert({
                             user_id: session.user.id,
-                            full_name: formData.get("full_name"),
-                            phone_number: formData.get("phone_number"),
-                            pincode: formData.get("pincode"),
-                            address_line_1: formData.get("address_line_1"),
-                            address_line_2: formData.get("address_line_2"),
-                            city: formData.get("city"),
-                            state: formData.get("state"),
+                            full_name: enteredAddress.full_name,
+                            phone_number: enteredAddress.phone_number,
+                            pincode: enteredAddress.pincode,
+                            address_line_1: enteredAddress.address_line_1,
+                            address_line_2: enteredAddress.address_line_2,
+                            city: enteredAddress.city,
+                            state: enteredAddress.state,
                             is_default: true
                           }).select().single();
                           
-                          if (data) {
-                            setSavedAddresses(prev => [data, ...prev]);
-                            setSelectedAddressId(data.id);
-                            setShowNewAddressForm(false);
-                          } else {
-                            // Fallback if error
-                            setSelectedAddressId("temp-id");
+                          if (error || !data) {
+                            console.error("Address save failed:", error);
+                            toast.error(error?.message || "Failed to save delivery address. Please check your details.");
+                            return; // Strictly DO NOT proceed with fake ID!
                           }
-                        } else {
-                          // Allow guest to proceed to next step (will be prompted to login at payment)
-                          setSelectedAddressId("temp-id");
-                        }
 
-                        const { saveFollowUpLead } = await import("@/app/actions/follow-ups")
-                        await saveFollowUpLead(formData.get("full_name") as string, formData.get("phone_number") as string, total)
-                      } catch(err) { console.error(err) }
-                      setCurrentStep("payment"); 
+                          setSavedAddresses(prev => [data, ...prev]);
+                          setSelectedAddressId(data.id);
+                          setShowNewAddressForm(false);
+                          setPendingAddress(null);
+
+                          // Capture follow-up lead
+                          const { saveFollowUpLead } = await import("@/app/actions/follow-ups")
+                          await saveFollowUpLead(fullName, rawPhone, total)
+
+                          goToStep("payment");
+                        } else {
+                          // GUEST USER: Preserve details in state, capture lead, and prompt auth
+                          setPendingAddress(enteredAddress);
+
+                          const { saveFollowUpLead } = await import("@/app/actions/follow-ups")
+                          await saveFollowUpLead(fullName, rawPhone, total)
+
+                          toast.info("Please sign in or create an account to save your delivery address and complete payment.");
+                          openAuthModal();
+                          // Strictly DO NOT advance to payment with temp-id!
+                        }
+                      } catch(err) { 
+                        console.error(err);
+                        toast.error("An error occurred while saving address");
+                      }
                     }}>
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-[#221F1C]">New Address</h3>
@@ -452,39 +565,39 @@ export default function CartPage() {
 
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Customer Name*</label>
-                      <input required name="full_name" type="text" placeholder="Name" className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                      <input required name="full_name" type="text" placeholder="Name" defaultValue={pendingAddress?.full_name || ""} className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                     </div>
                     
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Mobile Number*</label>
                       <div className="flex">
                         <span className="bg-gray-100 border border-gray-300 border-r-0 rounded-l-sm p-3 text-sm text-gray-600">+91</span>
-                        <input required name="phone_number" type="tel" placeholder="9876543210" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" className="flex-1 border border-gray-300 rounded-r-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                        <input required name="phone_number" type="tel" placeholder="9876543210" pattern="[6-9][0-9]{9}" maxLength={10} title="Enter a valid 10-digit mobile number" defaultValue={pendingAddress?.phone_number || ""} className="flex-1 border border-gray-300 rounded-r-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                       </div>
                     </div>
 
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Pincode*</label>
                       <div className="relative">
-                        <input required name="pincode" type="text" placeholder="Eg. 410055" className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                        <input required name="pincode" type="text" placeholder="Eg. 410055" defaultValue={pendingAddress?.pincode || ""} className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                         <MapPin className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       </div>
                     </div>
 
                     <div>
                       <label className="text-xs text-gray-500 mb-1 block">Address*</label>
-                      <input required name="address_line_1" type="text" placeholder="Flat, House no., Building, Company" className="w-full border border-gray-300 rounded-sm p-3 mb-2 focus:outline-none focus:border-[#221F1C] text-sm" />
-                      <input name="address_line_2" type="text" placeholder="Area, Street, Sector, Village" className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                      <input required name="address_line_1" type="text" placeholder="Flat, House no., Building, Company" defaultValue={pendingAddress?.address_line_1 || ""} className="w-full border border-gray-300 rounded-sm p-3 mb-2 focus:outline-none focus:border-[#221F1C] text-sm" />
+                      <input name="address_line_2" type="text" placeholder="Area, Street, Sector, Village" defaultValue={pendingAddress?.address_line_2 || ""} className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">City*</label>
-                        <input required name="city" type="text" placeholder="City" className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                        <input required name="city" type="text" placeholder="City" defaultValue={pendingAddress?.city || ""} className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                       </div>
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">State*</label>
-                        <input required name="state" type="text" placeholder="State" className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
+                        <input required name="state" type="text" placeholder="State" defaultValue={pendingAddress?.state || ""} className="w-full border border-gray-300 rounded-sm p-3 focus:outline-none focus:border-[#221F1C] text-sm" />
                       </div>
                     </div>
 
@@ -497,6 +610,10 @@ export default function CartPage() {
                 {savedAddresses.length > 0 && !showNewAddressForm && (
                   <button 
                     onClick={async () => {
+                      if (!selectedAddressId || selectedAddressId === "temp-id") {
+                        toast.error("Please select a valid delivery address");
+                        return;
+                      }
                       const addr = savedAddresses.find(a => a.id === selectedAddressId)
                       if (addr) {
                         try {
@@ -504,9 +621,9 @@ export default function CartPage() {
                           await saveFollowUpLead(addr.full_name, addr.phone_number, orderTotal)
                         } catch(err) { console.error(err) }
                       }
-                      setCurrentStep("payment")
+                      goToStep("payment")
                     }}
-                    disabled={!selectedAddressId}
+                    disabled={!selectedAddressId || selectedAddressId === "temp-id"}
                     className="w-full bg-[#221F1C] text-white rounded-full py-4 font-medium hover:bg-black transition-colors mt-6 disabled:opacity-50"
                   >
                     Deliver Here
@@ -580,9 +697,9 @@ export default function CartPage() {
                       <span className="text-gray-500">Delivery Fee</span>
                       <span>₹{deliveryFee}</span>
                     </div>
-                    <p className="text-[10px] text-[#9A8F85] italic leading-relaxed -mt-2">
-                      📦 Note: Shipping charges may vary depending on the parcel's weight and size. If the actual shipping cost is higher than the estimated amount, an additional ₹30–₹50 may be applicable. We'll share the shipping receipt with you for transparency.
-                    </p>
+                    <div className="bg-amber-50/70 border border-amber-200/60 rounded-sm p-2.5 text-[11px] text-amber-900 leading-normal -mt-1">
+                      <span className="font-semibold">Note:</span> Estimated delivery fee. An additional ₹30–₹50 may apply based on actual parcel weight/size (shipping receipt shared on dispatch).
+                    </div>
                   </>
                 )}
               </div>
@@ -656,7 +773,7 @@ export default function CartPage() {
 
               {currentStep === "cart" && (
                 <button 
-                  onClick={() => setCurrentStep("address")}
+                  onClick={() => goToStep("address")}
                   disabled={items.length === 0}
                   className="w-full bg-[#221F1C] text-white py-4 rounded-full font-medium hover:bg-black transition-colors disabled:opacity-50"
                 >

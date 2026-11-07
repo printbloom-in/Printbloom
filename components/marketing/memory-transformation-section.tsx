@@ -4,7 +4,7 @@ import { SectionHeading } from "@/components/ui/section-heading"
 
 export function MemoryTransformationSection() {
   return (
-    <section className="py-24 px-4 md:px-8 bg-[#221F1C] text-[#FBF6EE]">
+    <section className="py-14 md:py-24 px-4 md:px-8 bg-[#221F1C] text-[#FBF6EE]">
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           

@@ -3,7 +3,7 @@ import Image from "next/image"
 
 export function HomepageTrustSection() {
   return (
-    <section className="bg-[#FBF6EE] py-20 px-4">
+    <section className="bg-[#FBF6EE] py-12 md:py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-12">

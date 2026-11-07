@@ -4,7 +4,7 @@ import NextLink from "next/link"
 
 export function RemindersCTASection() {
   return (
-    <section className="py-24 bg-[#E0D9CF] border-y border-[#DFBC94]/20 relative overflow-hidden">
+    <section className="py-14 md:py-24 bg-[#E0D9CF] border-y border-[#DFBC94]/20 relative overflow-hidden">
       {/* Decorative floral accent */}
       <div className="absolute top-0 right-0 opacity-10 pointer-events-none transform translate-x-1/3 -translate-y-1/3">
         <svg width="400" height="400" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
