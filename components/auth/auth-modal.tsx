@@ -84,19 +84,13 @@ export function AuthModal() {
     setResending(true)
     setError("")
     try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: targetEmail,
-        options: {
-          emailRedirectTo: `${siteUrl}/auth/callback?next=/profile`,
-        },
-      })
+      const { resendConfirmationEmail } = await import("@/app/actions/auth")
+      const result = await resendConfirmationEmail(targetEmail)
 
-      if (error) {
-        toast.error(error.message || "Failed to resend confirmation email.")
+      if (!result.success) {
+        toast.error(result.error || "Failed to resend confirmation email.")
       } else {
-        toast.success("Confirmation link resent! Please check your inbox.")
+        toast.success(result.message || "Confirmation link sent! Please check your inbox.")
         setResendCooldown(60)
       }
     } catch {

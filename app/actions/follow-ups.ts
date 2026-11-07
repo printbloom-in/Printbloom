@@ -4,12 +4,13 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { revalidatePath } from "next/cache"
 import { ADMIN_EMAILS } from "@/lib/admin-config"
 import { validatePhoneNumber } from "@/lib/phone-validation"
-import { checkRateLimit, getIP } from "@/lib/rate-limit"
+import { checkDistributedRateLimit, getIP } from "@/lib/rate-limit"
 
 export async function saveFollowUpLead(customer_name: string, phone_number: string, cart_total: number) {
-  // 1. Server-side Rate Limiting (anti-bot / anti-spam)
+  // 1. Distributed Server-side Rate Limiting (Upstash Redis with memory fallback)
   const ip = await getIP()
-  if (!checkRateLimit(ip, "saveFollowUpLead").success) {
+  const rateLimit = await checkDistributedRateLimit(ip, "lead")
+  if (!rateLimit.success) {
     return { success: false, error: "Too many requests. Please try again later." }
   }
 

@@ -3,8 +3,10 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 let ratelimiterInstance: Ratelimit | null = null;
+let leadRateLimiterInstance: Ratelimit | null = null;
+let resendRateLimiterInstance: Ratelimit | null = null;
 
-// Initialize an Upstash rate limiter if env keys are present
+// Initialize an Upstash rate limiter for general API routes (5 req/min)
 export const getRateLimiter = () => {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     return null;
@@ -13,15 +15,52 @@ export const getRateLimiter = () => {
   if (!ratelimiterInstance) {
     ratelimiterInstance = new Ratelimit({
       redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(5, "1 m"), // Max 5 requests per 1 minute per IP
+      limiter: Ratelimit.slidingWindow(5, "1 m"),
       analytics: true,
+      prefix: "ratelimit:api",
     });
   }
 
   return ratelimiterInstance;
 };
 
-// Fallback in-memory rate limiting for server actions (enquiries, reminders, promo-codes)
+// Distributed rate limiter for abandoned-cart leads (5 submissions per 10 minutes per IP)
+export const getLeadRateLimiter = () => {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  
+  if (!leadRateLimiterInstance) {
+    leadRateLimiterInstance = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(5, "10 m"),
+      analytics: true,
+      prefix: "ratelimit:lead",
+    });
+  }
+
+  return leadRateLimiterInstance;
+};
+
+// Distributed rate limiter for auth confirmation resend (3 requests per 15 minutes per IP)
+export const getResendRateLimiter = () => {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  
+  if (!resendRateLimiterInstance) {
+    resendRateLimiterInstance = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(3, "15 m"),
+      analytics: true,
+      prefix: "ratelimit:resend",
+    });
+  }
+
+  return resendRateLimiterInstance;
+};
+
+// Fallback in-memory rate limiting for server actions
 type RateLimitEntry = {
   count: number;
   resetTime: number; 
@@ -42,6 +81,7 @@ export async function getIP(): Promise<string> {
   }
 }
 
+// In-memory fallback rate limiter
 export function checkRateLimit(ip: string, endpoint: string): { success: boolean } {
   const key = `${endpoint}:${ip}`;
   const now = Date.now();
@@ -59,4 +99,31 @@ export function checkRateLimit(ip: string, endpoint: string): { success: boolean
 
   entry.count += 1;
   return { success: true };
+}
+
+// Distributed rate limit check with graceful memory fallback
+export async function checkDistributedRateLimit(
+  ip: string, 
+  action: "lead" | "resend" | "general"
+): Promise<{ success: boolean; source: "redis" | "memory" }> {
+  let limiter: Ratelimit | null = null;
+  if (action === "lead") {
+    limiter = getLeadRateLimiter();
+  } else if (action === "resend") {
+    limiter = getResendRateLimiter();
+  } else {
+    limiter = getRateLimiter();
+  }
+
+  if (limiter && ip !== "unknown-ip") {
+    try {
+      const result = await limiter.limit(ip);
+      return { success: result.success, source: "redis" };
+    } catch (err) {
+      console.warn("Upstash Redis rate limit failed, falling back to local memory:", err);
+      return { ...checkRateLimit(ip, action), source: "memory" };
+    }
+  }
+
+  return { ...checkRateLimit(ip, action), source: "memory" };
 }

@@ -14,30 +14,36 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createSupabaseServerClient()
 
-  // Handle PKCE code flow (e.g. from standard magic link / email link with code)
+  // 1. Handle PKCE code flow
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const destination = new URL(safeNext, requestUrl.origin)
-      destination.searchParams.set("verified", "true")
+      const destination = new URL("/auth/verified", requestUrl.origin)
+      destination.searchParams.set("status", "success")
+      if (safeNext && safeNext !== "/profile") {
+        destination.searchParams.set("next", safeNext)
+      }
       return NextResponse.redirect(destination)
     }
     console.error("Auth callback code exchange error:", error.message)
   }
 
-  // Handle OTP / token_hash flow (e.g. from custom verification links)
+  // 2. Handle OTP / token_hash flow
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
     if (!error) {
-      const destination = new URL(safeNext, requestUrl.origin)
-      destination.searchParams.set("verified", "true")
+      const destination = new URL("/auth/verified", requestUrl.origin)
+      destination.searchParams.set("status", "success")
+      if (safeNext && safeNext !== "/profile") {
+        destination.searchParams.set("next", safeNext)
+      }
       return NextResponse.redirect(destination)
     }
     console.error("Auth callback OTP verification error:", error.message)
   }
 
-  // If verification failed or expired, redirect gracefully with an informative flag
-  const fallback = new URL("/profile", requestUrl.origin)
-  fallback.searchParams.set("auth_error", "verification_failed")
+  // 3. Fallback for expired, invalid, or already-used links
+  const fallback = new URL("/auth/verified", requestUrl.origin)
+  fallback.searchParams.set("status", "error")
   return NextResponse.redirect(fallback)
 }
